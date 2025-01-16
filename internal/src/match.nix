@@ -3,7 +3,8 @@ let
   inherit (builtins) stringLength substring;
 
   path = import ./path.nix { inherit lib; };
-  inherit (import ./pattern.nix { inherit lib; }) isZeroLengthPattern;
+  inherit (import ./pattern.nix { inherit lib; })
+    isZeroLengthPattern parseCharClass matchesCharClass;
 
   /* Helper: charAt
      Type: String -> Int -> String
@@ -39,7 +40,6 @@ in {
   match = pattern: name:
     let
       patLen = stringLength pattern;
-
       nameLen = stringLength name;
 
       doMatch = { nameIdx, patIdx, startOfSegment, starBacktrack
@@ -51,15 +51,16 @@ in {
         else
           let
             nameChar = charAt name nameIdx;
-
             patChar = charAt pattern patIdx;
 
             isStar = patChar == "*";
-
             isEscape = patChar == "\\";
+            isClass = patChar == "[";
 
           in if isStar then
             handleStar args
+          else if isClass then
+            handleCharClass args
           else if isEscape && ((patIdx + 1) >= patLen) then
           # todo: ErrBadPattern
             false
@@ -72,6 +73,28 @@ in {
             })
           else
             handleBacktrack args;
+
+      /* Function: handleCharClass
+         Type: args -> { nameIdx: Int, patIdx: Int, startOfSegment: Bool }
+         Handles character class pattern matching ([abc], [a-z], [^abc], [!0-9]).
+         Called when a '[' character is encountered in the pattern.
+
+         Examples:
+           Pattern: "src/[fl]*.c" matches "src/foo.c", "src/lib.c"
+      */
+      handleCharClass = args:
+        let
+          classInfo = parseCharClass pattern args.patIdx;
+          matches =
+            matchesCharClass classInfo.content (charAt name args.nameIdx);
+        in if matches then
+          doMatch (args // {
+            nameIdx = args.nameIdx + 1;
+            patIdx = classInfo.endIdx + 1;
+            startOfSegment = false;
+          })
+        else
+          handleBacktrack args;
 
       handleStar = args:
         let

@@ -79,6 +79,61 @@ let
     result = normalizeFileset testFileset;
   in runTest "escaping" result [ "src/foo*.c" ];
 
+  testCharClass = runTest "character class matching"
+    (normalizeFileset (globset.lib.glob testRoot "src/[fl]*.c")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/lib.c"
+    ];
+
+  testCharRange = runTest "character range matching"
+    (normalizeFileset (globset.lib.glob testRoot "**/[a-m]*.py"))
+    [ "scripts/main.py" ];
+
+  testNegatedClass = runTest "negated character class"
+    (normalizeFileset (globset.lib.glob testRoot "src/[^t]*.c")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/lib.c"
+      "src/main.c"
+    ];
+
+  testNegatedClassMultiple = runTest "negated character class multiple"
+    (normalizeFileset (globset.lib.glob testRoot "src/[^lt]*.c")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/main.c"
+    ];
+
+  testNegatedClassAlt = runTest "negated character class with !"
+    (normalizeFileset (globset.lib.glob testRoot "src/[!t]*.c")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/lib.c"
+      "src/main.c"
+    ];
+
+  testCompoundClass = runTest "compound character class patterns"
+    (normalizeFileset (globset.lib.glob testRoot "**/*.[ch]")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/lib.c"
+      "src/lib.h"
+      "src/main.c"
+      "src/test/test_main.c"
+    ];
+
+  testClassWithGlobs = runTest "Pass multiple ranges with globs"
+    (normalizeFileset
+      (globset.lib.globs testRoot [ "**/*[m-o].py" "**/*[r-t].py" ])) [
+        "scripts/main.py"
+        "scripts/utils.py"
+      ];
+
+  testClassWithMixed = runTest "mixed character class with range and literals"
+    (normalizeFileset (globset.lib.glob testRoot "**/ma[h-j]n.py"))
+    [ "scripts/main.py" ];
+
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
       ${testGoProject}
@@ -88,6 +143,14 @@ let
       ${testProperDoublestar}
       ${testPythonFiles}
       ${testEscaping}
+      ${testCharClass}
+      ${testCharRange}
+      ${testNegatedClass}
+      ${testNegatedClassAlt}
+      ${testCompoundClass}
+      ${testClassWithGlobs}
+      ${testNegatedClassMultiple}
+      ${testClassWithMixed}
       mkdir -p $out
       echo "All tests passed!" > $out/result
     '';
