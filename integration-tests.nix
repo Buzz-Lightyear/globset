@@ -85,6 +85,16 @@ let
       "src/foobar.c"
       "src/lib.c"
     ];
+  
+  testCharClassWithEscaping = runTest "character class matching w/ escaping"
+    (normalizeFileset (globset.lib.glob testRoot "src/[e-g]oo\\*.c")) [
+      "src/foo*.c"
+    ];
+
+  testMultipleCharClassWithEscaping = runTest "multiple character class matching w/ escaping"
+    (normalizeFileset (globset.lib.glob testRoot "src/[e-g][^n][n-q]\\*.c")) [
+      "src/foo*.c"
+    ];
 
   testCharRange = runTest "character range matching"
     (normalizeFileset (globset.lib.glob testRoot "**/[a-m]*.py"))
@@ -144,6 +154,8 @@ let
       ${testPythonFiles}
       ${testEscaping}
       ${testCharClass}
+      ${testCharClassWithEscaping}
+      ${testMultipleCharClassWithEscaping}
       ${testCharRange}
       ${testNegatedClass}
       ${testNegatedClassAlt}

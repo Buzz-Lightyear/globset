@@ -57,7 +57,19 @@ in {
             isEscape = patChar == "\\";
             isClass = patChar == "[";
 
-          in if isStar then
+            nextPatChar = if isEscape && (patIdx + 1) < patLen
+              then charAt pattern (patIdx + 1)
+              else null;
+          in if nextPatChar != null then
+            if nextPatChar == nameChar then
+              doMatch (args // {
+                nameIdx = nameIdx + 1;
+                patIdx = patIdx + 2;
+                startOfSegment = isSeparator nameChar;
+              })
+            else
+              handleBacktrack args
+          else if isStar then
             handleStar args
           else if isClass then
             handleCharClass args
@@ -67,8 +79,7 @@ in {
           else if patChar == nameChar then
             doMatch (args // {
               nameIdx = nameIdx + 1;
-              # If escaped, skip an additional rune.
-              patIdx = patIdx + 1 + (if isEscape then 1 else 0);
+              patIdx = patIdx + 1;
               startOfSegment = isSeparator patChar;
             })
           else
