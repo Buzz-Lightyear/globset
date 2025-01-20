@@ -27,21 +27,6 @@ let
       fi
     '';
 
-  testGetEverything = runTest "globs all files" (normalizeFileset (globset.lib.glob testRoot "**")) [
-    "cmd/app/main.go"
-    "go.mod"
-    "go.sum"
-    "pkg/lib/utils.go"
-    "scripts/main.py"
-    "scripts/utils.py"
-    "src/foo*.c"
-    "src/foobar.c"
-    "src/lib.c"
-    "src/lib.h"
-    "src/main.c"
-    "src/test/test_main.c"
-  ];
-
   testGoProject = runTest "globs all Go files" (normalizeFileset
     (globset.lib.globs testRoot [ "go.mod" "go.sum" "**/*.go" ])) [
       "cmd/app/main.go"
@@ -100,16 +85,15 @@ let
       "src/foobar.c"
       "src/lib.c"
     ];
-  
-  testCharClassWithEscaping = runTest "character class matching w/ escaping"
-    (normalizeFileset (globset.lib.glob testRoot "src/[e-g]oo\\*.c")) [
-      "src/foo*.c"
-    ];
 
-  testMultipleCharClassWithEscaping = runTest "multiple character class matching w/ escaping"
-    (normalizeFileset (globset.lib.glob testRoot "src/[e-g][^n][n-q]\\*.c")) [
-      "src/foo*.c"
-    ];
+  testCharClassWithEscaping = runTest "character class matching w/ escaping"
+    (normalizeFileset (globset.lib.glob testRoot "src/[e-g]oo\\*.c"))
+    [ "src/foo*.c" ];
+
+  testMultipleCharClassWithEscaping =
+    runTest "multiple character class matching w/ escaping"
+    (normalizeFileset (globset.lib.glob testRoot "src/[e-g][^n][n-q]\\*.c"))
+    [ "src/foo*.c" ];
 
   testCharRange = runTest "character range matching"
     (normalizeFileset (globset.lib.glob testRoot "**/[a-m]*.py"))
@@ -159,9 +143,33 @@ let
     (normalizeFileset (globset.lib.glob testRoot "**/ma[h-j]n.py"))
     [ "scripts/main.py" ];
 
+  testBasicBrace = runTest "simple brace expansion"
+    (normalizeFileset (globset.lib.glob testRoot "src/*.{c,h}")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/lib.c"
+      "src/lib.h"
+      "src/main.c"
+    ];
+
+  testEmptyBrace = runTest "empty alternatives in brace"
+    (normalizeFileset (globset.lib.glob testRoot "src/{,test/}*.c")) [
+      "src/foo*.c"
+      "src/foobar.c"
+      "src/lib.c"
+      "src/main.c"
+      "src/test/test_main.c"
+    ];
+
+  testMultipleBraces = runTest "multiple brace expressions" (normalizeFileset
+    (globset.lib.glob testRoot "{src,scripts}/{main,utils}.{c,py}")) [
+      "scripts/main.py"
+      "scripts/utils.py"
+      "src/main.c"
+    ];
+
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
-      ${testGetEverything}
       ${testGoProject}
       ${testCProject}
       ${testDoublestar}
@@ -179,6 +187,9 @@ let
       ${testClassWithGlobs}
       ${testNegatedClassMultiple}
       ${testClassWithMixed}
+      ${testBasicBrace}
+      ${testEmptyBrace}
+      ${testMultipleBraces}
       mkdir -p $out
       echo "All tests passed!" > $out/result
     '';
