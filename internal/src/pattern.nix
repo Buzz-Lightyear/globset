@@ -124,7 +124,6 @@ in rec {
     else
       concatMap expandOne components.alternates;
 
->>>>>>> srini/{}
   /* Function: parseCharClass
      Type: String -> Int -> { content: String, endIdx: Int, isNegated: Bool }
      Parses a character class starting at the given index. Handles
@@ -143,7 +142,6 @@ in rec {
       findClosingBracket = idx:
         if idx >= len then
           -1
-<<<<<<< HEAD
         else
           let
             char = substring idx 1 str;
@@ -172,15 +170,6 @@ in rec {
 
       rawContent = substring (startIdx + 1) (endIdx - startIdx - 1) str;
       content = processContent rawContent;
-=======
-        else if substring idx 1 str == "]" && idx > startIdx + 1 then
-          idx
-        else
-          findClosingBracket (idx + 1);
-
-      endIdx = findClosingBracket (startIdx + 1);
-      content = substring (startIdx + 1) (endIdx - startIdx - 1) str;
->>>>>>> srini/{}
       firstChar = substring (startIdx + 1) 1 str;
     in {
       inherit content endIdx;
@@ -275,8 +264,7 @@ in rec {
       Unescapes meta characters in a pattern string.
   */
   unescapeMeta = pattern:
-    replaceStrings [ "\\*" "\\[" "\\]" ] [ "*" "[" "]" ]
-    pattern;
+    replaceStrings [ "\\*" "\\[" "\\]" ] [ "*" "[" "]" ] pattern;
 
   /* Function: isZeroLengthPattern
       Type: String -> Bool

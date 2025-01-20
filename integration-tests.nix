@@ -176,16 +176,16 @@ let
     ];
 
   testBracesWithEscaping = runTest "Braces with escaped characters"
-    (normalizeFileset (globset.lib.globs testRoot [ "src/{foob*,foo\\*}.{c,h}" ])) [
-      "src/foo*.c"
-      "src/foobar.c"
-    ];
-
-  testBracesWithEmptyAndEscaped = runTest "Braces with empty option and escaped character"
     (normalizeFileset
-      (globset.lib.globs testRoot [ "src/{,foo\\*}.c" ])) [
+      (globset.lib.globs testRoot [ "src/{foob*,foo\\*}.{c,h}" ])) [
         "src/foo*.c"
+        "src/foobar.c"
       ];
+
+  testBracesWithEmptyAndEscaped =
+    runTest "Braces with empty option and escaped character"
+    (normalizeFileset (globset.lib.globs testRoot [ "src/{,foo\\*}.c" ]))
+    [ "src/foo*.c" ];
 
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
