@@ -2,7 +2,7 @@
 let
   inherit (builtins)
     head replaceStrings stringLength substring tail pathExists match elemAt
-    length concatMap elem;
+    length concatMap elem filter;
 
   inherit (lib)
     stringToCharacters hasPrefix hasInfix removePrefix splitString take drop;
