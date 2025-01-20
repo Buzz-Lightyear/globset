@@ -2,16 +2,26 @@
 let
   inherit (builtins)
     head replaceStrings stringLength substring tail pathExists match elemAt
-    length;
+    length concatMap elem;
 
-  inherit (lib) stringToCharacters hasPrefix removePrefix;
+  inherit (lib)
+    stringToCharacters hasPrefix hasInfix removePrefix splitString take drop;
   inherit (lib.strings) charToInt;
   inherit (lib.filesystem) pathType;
+  inherit (lib.lists) concatLists;
 
   asciiLowerA = 97;
   asciiLowerZ = 122;
 
 in rec {
+
+  /* Function: isEscaped
+     Type: [String] -> Int -> Bool
+     Checks if a character at given index is escaped by a backslash
+     Safely handles boundary conditions
+  */
+  isEscaped = chars: idx:
+    if idx <= 0 then false else head (take 1 (drop (idx - 1) chars)) == "\\";
 
   /* Function: parseAlternates
      Type: String -> { prefix: String, alternates: [String], suffix: String }
@@ -33,8 +43,7 @@ in rec {
       findOpen = chars: idx:
         if chars == [ ] then
           -1
-        else if head chars == "{"
-        && !(elem "\\" (take 1 (drop (idx - 1) chars))) then
+        else if head chars == "{" && !isEscaped chars idx then
           idx
         else
           findOpen (tail chars) (idx + 1);
@@ -43,28 +52,41 @@ in rec {
       findClose = chars: idx: depth:
         if chars == [ ] then
           -1
-        else if head chars == "}" && depth == 1 then
+        else if head chars == "}" && depth == 1 && !isEscaped chars idx then
           idx
-        else if head chars == "{" then
+        else if head chars == "{" && !isEscaped chars idx then
           findClose (tail chars) (idx + 1) (depth + 1)
-        else if head chars == "}" then
+        else if head chars == "}" && !isEscaped chars idx then
           findClose (tail chars) (idx + 1) (depth - 1)
         else
           findClose (tail chars) (idx + 1) depth;
 
       openIdx = findOpen chars 0;
-      closeIdx = findClose (drop (openIdx + 1) chars) (openIdx + 1) 1;
 
-      # Split into components
+      # If no opening brace found, return whole pattern
+      noAlternates = openIdx == -1;
+
+      # Find closing brace starting after opening brace
+      closeIdx = if noAlternates then
+        -1
+      else
+        findClose (drop (openIdx + 1) chars) (openIdx + 1) 1;
+
+      # Handle case where no matching close brace
+      invalidPattern = closeIdx == -1;
+
+    in if noAlternates || invalidPattern then {
+      prefix = "";
+      alternates = [ pattern ];
+      suffix = "";
+    } else {
       prefix = substring 0 openIdx pattern;
+      # Split content and handle escapes
       content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
+      alternates = map unescapeMeta (splitString "," content);
       suffix =
         substring (closeIdx + 1) (stringLength pattern - closeIdx - 1) pattern;
-
-      # Split alternates and handle escapes
-      alternates = map unescapeMeta (splitString "," content);
-
-    in { inherit prefix alternates suffix; };
+    };
 
   /* Function: expandAlternates
      Type: String -> [String]

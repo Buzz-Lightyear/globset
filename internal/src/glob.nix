@@ -2,7 +2,8 @@
 let
   inherit (builtins) filter pathExists readDir substring stringLength;
 
-  inherit (lib) concatLists mapAttrsToList hasPrefix removePrefix foldl';
+  inherit (lib)
+    concatLists concatMap mapAttrsToList hasPrefix removePrefix foldl';
 
   inherit (lib.filesystem) pathType;
 
@@ -74,8 +75,8 @@ in rec {
       # Original globSegments logic, renamed to globSegments'
       globSegments' = root: pattern': firstSegment:
         let
-          patternStart = pattern.firstUnescapedMeta pattern';
-          splitIndex = path.lastIndexSlash pattern';
+          patternStart = firstUnescapedMeta pattern';
+          splitIndex = lastIndexSlash pattern';
 
           dir =
             if splitIndex == -1 then "" else substring 0 splitIndex pattern';
@@ -86,7 +87,7 @@ in rec {
             substring (splitIndex + 1) (stringLength pattern') pattern';
 
         in if patternStart == -1 then
-          pattern.handleNoMeta root pattern' firstSegment
+          handleNoMeta root pattern' firstSegment
         else if firstSegment && pattern' == "**" then
           [ "" ]
         else if splitIndex <= patternStart then

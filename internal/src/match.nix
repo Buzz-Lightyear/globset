@@ -57,9 +57,10 @@ in {
             isEscape = patChar == "\\";
             isClass = patChar == "[";
 
-            nextPatChar = if isEscape && (patIdx + 1) < patLen
-              then charAt pattern (patIdx + 1)
-              else null;
+            nextPatChar = if isEscape && (patIdx + 1) < patLen then
+              charAt pattern (patIdx + 1)
+            else
+              null;
           in if nextPatChar != null then
             if nextPatChar == nameChar then
               doMatch (args // {
