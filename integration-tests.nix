@@ -168,6 +168,12 @@ let
       "src/main.c"
     ];
 
+  testBracesWithEscaping = runTest "Braces with escaped characters"
+    (normalizeFileset (globset.lib.globs testRoot [ "src/{foob*,foo\\*}.c" ])) [
+      "src/foo*.c"
+      "src/foobar.c"
+    ];
+
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
       ${testGoProject}
@@ -190,6 +196,7 @@ let
       ${testBasicBrace}
       ${testEmptyBrace}
       ${testMultipleBraces}
+      ${testBracesWithEscaping}
       mkdir -p $out
       echo "All tests passed!" > $out/result
     '';
