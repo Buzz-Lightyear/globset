@@ -14,19 +14,16 @@ let
   asciiLowerZ = 122;
 
 in rec {
-  /* Function: isEscaped
-     Type: [String] -> Int -> Bool
-     Checks if a character at given index is escaped by a backslash
-     Safely handles boundary conditions
+  /* Function: findEscapedChar
+     Type: [String] -> Int -> String -> Bool
+     Checks if a specific character is escaped by a backslash sequence
   */
-  isEscaped = chars: idx:
+  findEscapedChar = chars: idx: expectedChar:
     let
-      len = length chars;
       prevIdx = idx - 1;
-    in if idx <= 0 || prevIdx < 0 || prevIdx >= len then
-      false
-    else
-      elemAt chars prevIdx == "\\";
+      prevChar = if prevIdx >= 0 then elemAt chars prevIdx else "";
+      currChar = elemAt chars idx;
+    in prevChar == "\\" && currChar == expectedChar;
 
   /* Function: parseAlternates
      Type: String -> { prefix: String, alternates: [String], suffix: String }
@@ -47,7 +44,7 @@ in rec {
       findOpen = chars: idx:
         if chars == [ ] then
           -1
-        else if head chars == "{" && !isEscaped chars idx then
+        else if head chars == "{" && !(findEscapedChar chars idx "{") then
           idx
         else
           findOpen (tail chars) (idx + 1);
@@ -55,11 +52,11 @@ in rec {
       findClose = chars: idx: depth:
         if chars == [ ] then
           -1
-        else if head chars == "}" && depth == 1 && !isEscaped chars idx then
+        else if head chars == "}" && depth == 1 && !(findEscapedChar chars idx "}") then
           idx
-        else if head chars == "{" && !isEscaped chars idx then
+        else if head chars == "{" && !(findEscapedChar chars idx "{") then
           findClose (tail chars) (idx + 1) (depth + 1)
-        else if head chars == "}" && !isEscaped chars idx then
+        else if head chars == "}" && !(findEscapedChar chars idx "}") then
           findClose (tail chars) (idx + 1) (depth - 1)
         else
           findClose (tail chars) (idx + 1) depth;
@@ -84,9 +81,8 @@ in rec {
       let
         prefix = substring 0 openIdx pattern;
         content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
-        alternates = map unescapeMeta (splitString "," content);
-        suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1)
-          pattern;
+        alternates = filter (x: x != "") (builtins.split "(?<!\\\\)," content);
+        suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1) pattern;
       in { inherit prefix alternates suffix; };
 
   /* Function: expandAlternates
@@ -114,7 +110,11 @@ in rec {
         [ components.suffix ];
 
       expandOne = alt:
-        map (suffix: "${components.prefix}${alt}${suffix}") suffixVariants;
+        map (suffix:
+          if alt == "" then
+            unescapeMeta "${components.prefix}${suffix}"
+          else
+            unescapeMeta "${components.prefix}${alt}${suffix}") suffixVariants;
 
     in if noAlts then
       [ pattern ]
@@ -261,7 +261,14 @@ in rec {
       Unescapes meta characters in a pattern string.
   */
   unescapeMeta = pattern:
-    replaceStrings [ "\\*" "\\[" "\\]" ] [ "*" "[" "]" ] pattern;
+    replaceStrings [ "\\*" "\\[" "\\]" "\\{" "\\}" "\\," ] [
+      "*"
+      "["
+      "]"
+      "{"
+      "}"
+      ","
+    ] pattern;
 
   /* Function: isZeroLengthPattern
       Type: String -> Bool

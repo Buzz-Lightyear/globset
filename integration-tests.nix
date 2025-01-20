@@ -187,6 +187,12 @@ let
     (normalizeFileset (globset.lib.globs testRoot [ "src/{,foo\\*}.c" ]))
     [ "src/foo*.c" ];
 
+  testBracesWithEscapedBraces = runTest "Braces with escaped braces"
+    (normalizeFileset (globset.lib.globs testRoot [ "src/foo{\\{,\\}}.o" ])) [
+      "src/foo{.o"
+      "src/foo}.o"
+    ];
+
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
       ${testGoProject}
