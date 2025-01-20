@@ -27,6 +27,21 @@ let
       fi
     '';
 
+  testGetEverything = runTest "globs all files" (normalizeFileset (globset.lib.glob testRoot "**")) [
+    "cmd/app/main.go"
+    "go.mod"
+    "go.sum"
+    "pkg/lib/utils.go"
+    "scripts/main.py"
+    "scripts/utils.py"
+    "src/foo*.c"
+    "src/foobar.c"
+    "src/lib.c"
+    "src/lib.h"
+    "src/main.c"
+    "src/test/test_main.c"
+  ];
+
   testGoProject = runTest "globs all Go files" (normalizeFileset
     (globset.lib.globs testRoot [ "go.mod" "go.sum" "**/*.go" ])) [
       "cmd/app/main.go"
@@ -146,6 +161,7 @@ let
 
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
+      ${testGetEverything}
       ${testGoProject}
       ${testCProject}
       ${testDoublestar}
