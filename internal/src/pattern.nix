@@ -20,10 +20,12 @@ in rec {
   */
   findEscapedChar = chars: idx: expectedChar:
     let
+      len = length chars;
       prevIdx = idx - 1;
-      prevChar = if prevIdx >= 0 then elemAt chars prevIdx else "";
-      currChar = elemAt chars idx;
-    in prevChar == "\\" && currChar == expectedChar;
+    in if prevIdx < 0 || idx >= len then
+      false
+    else
+      (elemAt chars prevIdx) == "\\" && (elemAt chars idx) == expectedChar;
 
   /* Function: parseAlternates
      Type: String -> { prefix: String, alternates: [String], suffix: String }
@@ -44,7 +46,7 @@ in rec {
       findOpen = chars: idx:
         if chars == [ ] then
           -1
-        else if head chars == "{" && !(findEscapedChar chars idx "{") then
+        else if head chars == "{" && !findEscapedChar chars idx "{" then
           idx
         else
           findOpen (tail chars) (idx + 1);
@@ -53,17 +55,16 @@ in rec {
         if chars == [ ] then
           -1
         else if head chars == "}" && depth == 1
-        && !(findEscapedChar chars idx "}") then
+        && !findEscapedChar chars idx "}" then
           idx
-        else if head chars == "{" && !(findEscapedChar chars idx "{") then
+        else if head chars == "{" && !findEscapedChar chars idx "{" then
           findClose (tail chars) (idx + 1) (depth + 1)
-        else if head chars == "}" && !(findEscapedChar chars idx "}") then
+        else if head chars == "}" && !findEscapedChar chars idx "}" then
           findClose (tail chars) (idx + 1) (depth - 1)
         else
           findClose (tail chars) (idx + 1) depth;
 
       openIdx = findOpen chars 0;
-
       noAlternates = openIdx == -1;
       closeIdx = if noAlternates then
         -1
@@ -71,17 +72,15 @@ in rec {
         findClose (drop (openIdx + 1) chars) (openIdx + 1) 1;
 
       invalidPattern = closeIdx == -1;
-
-    in if noAlternates || invalidPattern then
-      let
-        prefix = "";
-        alternates = [ pattern ];
-        suffix = "";
-      in { inherit prefix alternates suffix; }
-    else
+    in if noAlternates || invalidPattern then {
+      prefix = "";
+      alternates = [ pattern ];
+      suffix = "";
+    } else
       let
         prefix = substring 0 openIdx pattern;
         content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
+        # Split on unescaped commas and filter empty strings
         alternates = filter (x: x != "") (builtins.split "(?<!\\\\)," content);
         suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1)
           pattern;
