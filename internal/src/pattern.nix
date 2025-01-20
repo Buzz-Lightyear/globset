@@ -45,7 +45,6 @@ in rec {
     let
       chars = stringToCharacters pattern;
 
-      # Find first unescaped {
       findOpen = chars: idx:
         if chars == [ ] then
           -1
@@ -54,7 +53,6 @@ in rec {
         else
           findOpen (tail chars) (idx + 1);
 
-      # Find matching closing }
       findClose = chars: idx: depth:
         if chars == [ ] then
           -1
@@ -69,16 +67,12 @@ in rec {
 
       openIdx = findOpen chars 0;
 
-      # If no opening brace found, return whole pattern
       noAlternates = openIdx == -1;
-
-      # Find closing brace starting after opening brace
       closeIdx = if noAlternates then
         -1
       else
         findClose (drop (openIdx + 1) chars) (openIdx + 1) 1;
 
-      # Handle case where no matching close brace
       invalidPattern = closeIdx == -1;
 
     in if noAlternates || invalidPattern then
@@ -111,18 +105,15 @@ in rec {
   */
   expandAlternates = pattern:
     let
-      # No alternates found - return original pattern
       noAlts = !hasInfix "{" pattern || pattern == "";
 
       components = parseAlternates pattern;
 
-      # Recursively handle suffix if it contains alternates
       suffixVariants = if hasInfix "{" components.suffix then
         expandAlternates components.suffix
       else
         [ components.suffix ];
 
-      # Generate all combinations
       expandOne = alt:
         map (suffix: "${components.prefix}${alt}${suffix}") suffixVariants;
 
