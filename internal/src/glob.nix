@@ -70,13 +70,13 @@ in rec {
   globSegments = root: pattern': firstSegment:
     let
       # First expand any alternates
-      expanded = expandAlternates pattern';
+      expanded = pattern.expandAlternates pattern';
 
       # Original globSegments logic, renamed to globSegments'
       globSegments' = root: pattern': firstSegment:
         let
-          patternStart = firstUnescapedMeta pattern';
-          splitIndex = lastIndexSlash pattern';
+          patternStart = pattern.firstUnescapedMeta pattern';
+          splitIndex = path.lastIndexSlash pattern';
 
           dir =
             if splitIndex == -1 then "" else substring 0 splitIndex pattern';
@@ -87,7 +87,7 @@ in rec {
             substring (splitIndex + 1) (stringLength pattern') pattern';
 
         in if patternStart == -1 then
-          handleNoMeta root pattern' firstSegment
+          pattern.handleNoMeta root pattern' firstSegment
         else if firstSegment && pattern' == "**" then
           [ "" ]
         else if splitIndex <= patternStart then
