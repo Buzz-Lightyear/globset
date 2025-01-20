@@ -27,6 +27,33 @@ in rec {
     else
       (elemAt chars prevIdx) == "\\" && (elemAt chars idx) == expectedChar;
 
+  /* Function: splitUnescaped
+     Type: String -> [String]
+     Splits string on unescaped commas while preserving escaped ones
+  */
+  splitUnescaped = str:
+    let
+      chars = stringToCharacters str;
+
+      # Accumulate characters until we hit an unescaped comma
+      collectPart = chars: current: parts:
+        if chars == [ ] then
+          parts ++ [ current ]
+        else
+          let
+            char = head chars;
+            rest = tail chars;
+          in if char == "\\" && rest != [ ] then
+          # Skip escape char and include next char
+            collectPart (tail rest) (current + char + (head rest)) parts
+          else if char == "," && !(findEscapedChar chars 0 ",") then
+          # Found unescaped comma, start new part
+            collectPart rest "" (parts ++ [ current ])
+          else
+          # Add char to current part
+            collectPart rest (current + char) parts;
+    in filter (x: x != "") (collectPart chars "" [ ]);
+
   /* Function: parseAlternates
      Type: String -> { prefix: String, alternates: [String], suffix: String }
      Parses a pattern containing alternates into its components.
@@ -80,8 +107,7 @@ in rec {
       let
         prefix = substring 0 openIdx pattern;
         content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
-        # Split on unescaped commas and filter empty strings
-        alternates = filter (x: x != "") (builtins.split "(?<!\\\\)," content);
+        alternates = splitUnescaped content;
         suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1)
           pattern;
       in { inherit prefix alternates suffix; };
