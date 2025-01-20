@@ -13,9 +13,6 @@ let
   asciiLowerA = 97;
   asciiLowerZ = 122;
 
-  asciiLowerA = 97;
-  asciiLowerZ = 122;
-
 in rec {
   /* Function: isEscaped
      Type: [String] -> Int -> Bool
