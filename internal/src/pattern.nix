@@ -2,16 +2,129 @@
 let
   inherit (builtins)
     head replaceStrings stringLength substring tail pathExists match elemAt
-    length;
+    length concatMap elem;
 
-  inherit (lib) stringToCharacters hasPrefix removePrefix;
-  inherit (lib.strings) charToInt concatStrings;
+  inherit (lib)
+    stringToCharacters hasPrefix hasInfix removePrefix splitString take drop;
+  inherit (lib.strings) charToInt;
   inherit (lib.filesystem) pathType;
+  inherit (lib.lists) concatLists;
+
+  asciiLowerA = 97;
+  asciiLowerZ = 122;
 
   asciiLowerA = 97;
   asciiLowerZ = 122;
 
 in rec {
+  /* Function: isEscaped
+     Type: [String] -> Int -> Bool
+     Checks if a character at given index is escaped by a backslash
+     Safely handles boundary conditions
+  */
+  isEscaped = chars: idx:
+    let
+      len = length chars;
+      prevIdx = idx - 1;
+    in if idx <= 0 || prevIdx < 0 || prevIdx >= len then
+      false
+    else
+      elemAt chars prevIdx == "\\";
+
+  /* Function: parseAlternates
+     Type: String -> { prefix: String, alternates: [String], suffix: String }
+     Parses a pattern containing alternates into its components.
+
+     Example:
+     "{foo},{bar}.{c,h}" ->
+     {
+       prefix = "";
+       alternates = ["foo" "bar"];
+       suffix = ".{c,h}";
+     }
+  */
+  parseAlternates = pattern:
+    let
+      chars = stringToCharacters pattern;
+
+      findOpen = chars: idx:
+        if chars == [ ] then
+          -1
+        else if head chars == "{" && !isEscaped chars idx then
+          idx
+        else
+          findOpen (tail chars) (idx + 1);
+
+      findClose = chars: idx: depth:
+        if chars == [ ] then
+          -1
+        else if head chars == "}" && depth == 1 && !isEscaped chars idx then
+          idx
+        else if head chars == "{" && !isEscaped chars idx then
+          findClose (tail chars) (idx + 1) (depth + 1)
+        else if head chars == "}" && !isEscaped chars idx then
+          findClose (tail chars) (idx + 1) (depth - 1)
+        else
+          findClose (tail chars) (idx + 1) depth;
+
+      openIdx = findOpen chars 0;
+
+      noAlternates = openIdx == -1;
+      closeIdx = if noAlternates then
+        -1
+      else
+        findClose (drop (openIdx + 1) chars) (openIdx + 1) 1;
+
+      invalidPattern = closeIdx == -1;
+
+    in if noAlternates || invalidPattern then
+      let
+        prefix = "";
+        alternates = [ pattern ];
+        suffix = "";
+      in { inherit prefix alternates suffix; }
+    else
+      let
+        prefix = substring 0 openIdx pattern;
+        content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
+        alternates = map unescapeMeta (splitString "," content);
+        suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1)
+          pattern;
+      in { inherit prefix alternates suffix; };
+
+  /* Function: expandAlternates
+     Type: String -> [String]
+     Expands a pattern with alternates into all possible combinations.
+
+     Example:
+     "{foo},{bar}.{c,h}" ->
+     [
+       "foo.c"
+       "foo.h"
+       "bar.c"
+       "bar.h"
+     ]
+  */
+  expandAlternates = pattern:
+    let
+      noAlts = !hasInfix "{" pattern || pattern == "";
+
+      components = parseAlternates pattern;
+
+      suffixVariants = if hasInfix "{" components.suffix then
+        expandAlternates components.suffix
+      else
+        [ components.suffix ];
+
+      expandOne = alt:
+        map (suffix: "${components.prefix}${alt}${suffix}") suffixVariants;
+
+    in if noAlts then
+      [ pattern ]
+    else
+      concatMap expandOne components.alternates;
+
+>>>>>>> srini/{}
   /* Function: parseCharClass
      Type: String -> Int -> { content: String, endIdx: Int, isNegated: Bool }
      Parses a character class starting at the given index. Handles
@@ -30,6 +143,7 @@ in rec {
       findClosingBracket = idx:
         if idx >= len then
           -1
+<<<<<<< HEAD
         else
           let
             char = substring idx 1 str;
@@ -58,6 +172,15 @@ in rec {
 
       rawContent = substring (startIdx + 1) (endIdx - startIdx - 1) str;
       content = processContent rawContent;
+=======
+        else if substring idx 1 str == "]" && idx > startIdx + 1 then
+          idx
+        else
+          findClosingBracket (idx + 1);
+
+      endIdx = findClosingBracket (startIdx + 1);
+      content = substring (startIdx + 1) (endIdx - startIdx - 1) str;
+>>>>>>> srini/{}
       firstChar = substring (startIdx + 1) 1 str;
     in {
       inherit content endIdx;
@@ -152,7 +275,8 @@ in rec {
       Unescapes meta characters in a pattern string.
   */
   unescapeMeta = pattern:
-    replaceStrings [ "\\*" "\\[" "\\]" ] [ "*" "[" "]" ] pattern;
+    replaceStrings [ "\\*" "\\[" "\\]" ] [ "*" "[" "]" ]
+    pattern;
 
   /* Function: isZeroLengthPattern
       Type: String -> Bool
