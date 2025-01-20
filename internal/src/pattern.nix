@@ -6,7 +6,7 @@ let
 
   inherit (lib)
     stringToCharacters hasPrefix hasInfix removePrefix splitString take drop;
-  inherit (lib.strings) charToIn concatStrings;
+  inherit (lib.strings) charToInt concatStrings;
   inherit (lib.filesystem) pathType;
   inherit (lib.lists) concatLists;
 
