@@ -52,7 +52,8 @@ in rec {
       findClose = chars: idx: depth:
         if chars == [ ] then
           -1
-        else if head chars == "}" && depth == 1 && !(findEscapedChar chars idx "}") then
+        else if head chars == "}" && depth == 1
+        && !(findEscapedChar chars idx "}") then
           idx
         else if head chars == "{" && !(findEscapedChar chars idx "{") then
           findClose (tail chars) (idx + 1) (depth + 1)
@@ -82,7 +83,8 @@ in rec {
         prefix = substring 0 openIdx pattern;
         content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
         alternates = filter (x: x != "") (builtins.split "(?<!\\\\)," content);
-        suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1) pattern;
+        suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1)
+          pattern;
       in { inherit prefix alternates suffix; };
 
   /* Function: expandAlternates

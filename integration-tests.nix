@@ -193,6 +193,10 @@ let
       "src/foo}.o"
     ];
 
+  testBracesWithEscapedComma = runTest "Braces with escaped comma"
+    (normalizeFileset (globset.lib.globs testRoot [ "src/foo{,\\,}.o" ]))
+    [ "src/foo,.o" ];
+
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
       ${testGoProject}
