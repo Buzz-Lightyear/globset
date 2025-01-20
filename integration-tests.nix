@@ -169,16 +169,15 @@ let
     ];
 
   testBracesWithEscaping = runTest "Braces with escaped characters"
-    (normalizeFileset (globset.lib.globs testRoot [ "src/{foob*,foo\\*}.c" ])) [
+    (normalizeFileset (globset.lib.globs testRoot [ "src/{foob*,foo\\*}.{c,h}" ])) [
       "src/foo*.c"
       "src/foobar.c"
     ];
 
-  testBracesWithEscapedBrace = runTest "Braces with escaped brace"
+  testBracesWithEmptyAndEscaped = runTest "Braces with empty option and escaped character"
     (normalizeFileset
-      (globset.lib.globs testRoot [ "src/{foo\\{,foo\\*}.{o,c}" ])) [
+      (globset.lib.globs testRoot [ "src/{,foo\\*}.c" ])) [
         "src/foo*.c"
-        "src/foo{.o"
       ];
 
   runAllTests =
@@ -204,7 +203,7 @@ let
       ${testEmptyBrace}
       ${testMultipleBraces}
       ${testBracesWithEscaping}
-      ${testBracesWithEscapedBrace}
+      ${testBracesWithEmptyAndEscaped}
       mkdir -p $out
       echo "All tests passed!" > $out/result
     '';
