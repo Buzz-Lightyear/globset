@@ -241,7 +241,8 @@ in rec {
       Unescapes meta characters in a pattern string.
   */
   unescapeMeta = pattern:
-    replaceStrings [ "\\*" "\\[" "\\]" "\\{" "\\}" ] [ "*" "[" "]" "{" "}" ] pattern;
+    replaceStrings [ "\\*" "\\[" "\\]" "\\{" "\\}" ] [ "*" "[" "]" "{" "}" ]
+    pattern;
 
   /* Function: isZeroLengthPattern
       Type: String -> Bool
