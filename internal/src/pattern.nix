@@ -12,6 +12,95 @@ let
   asciiLowerZ = 122;
 
 in rec {
+
+  /* Function: parseAlternates
+     Type: String -> { prefix: String, alternates: [String], suffix: String }
+     Parses a pattern containing alternates into its components.
+
+     Example:
+     "{foo},{bar}.{c,h}" ->
+     {
+       prefix = "";
+       alternates = ["foo" "bar"];
+       suffix = ".{c,h}";
+     }
+  */
+  parseAlternates = pattern:
+    let
+      chars = stringToCharacters pattern;
+
+      # Find first unescaped {
+      findOpen = chars: idx:
+        if chars == [ ] then
+          -1
+        else if head chars == "{"
+        && !(elem "\\" (take 1 (drop (idx - 1) chars))) then
+          idx
+        else
+          findOpen (tail chars) (idx + 1);
+
+      # Find matching closing }
+      findClose = chars: idx: depth:
+        if chars == [ ] then
+          -1
+        else if head chars == "}" && depth == 1 then
+          idx
+        else if head chars == "{" then
+          findClose (tail chars) (idx + 1) (depth + 1)
+        else if head chars == "}" then
+          findClose (tail chars) (idx + 1) (depth - 1)
+        else
+          findClose (tail chars) (idx + 1) depth;
+
+      openIdx = findOpen chars 0;
+      closeIdx = findClose (drop (openIdx + 1) chars) (openIdx + 1) 1;
+
+      # Split into components
+      prefix = substring 0 openIdx pattern;
+      content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
+      suffix =
+        substring (closeIdx + 1) (stringLength pattern - closeIdx - 1) pattern;
+
+      # Split alternates and handle escapes
+      alternates = map unescapeMeta (splitString "," content);
+
+    in { inherit prefix alternates suffix; };
+
+  /* Function: expandAlternates
+     Type: String -> [String]
+     Expands a pattern with alternates into all possible combinations.
+
+     Example:
+     "{foo},{bar}.{c,h}" ->
+     [
+       "foo.c"
+       "foo.h"
+       "bar.c"
+       "bar.h"
+     ]
+  */
+  expandAlternates = pattern:
+    let
+      # No alternates found - return original pattern
+      noAlts = !hasInfix "{" pattern || pattern == "";
+
+      components = parseAlternates pattern;
+
+      # Recursively handle suffix if it contains alternates
+      suffixVariants = if hasInfix "{" components.suffix then
+        expandAlternates components.suffix
+      else
+        [ components.suffix ];
+
+      # Generate all combinations
+      expandOne = alt:
+        map (suffix: "${components.prefix}${alt}${suffix}") suffixVariants;
+
+    in if noAlts then
+      [ pattern ]
+    else
+      concatMap expandOne components.alternates;
+
   /* Function: parseCharClass
      Type: String -> Int -> { content: String, endIdx: Int, isNegated: Bool }
      Parses a character class starting at the given index. Handles
