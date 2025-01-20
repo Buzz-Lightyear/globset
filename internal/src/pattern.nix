@@ -21,7 +21,13 @@ in rec {
      Safely handles boundary conditions
   */
   isEscaped = chars: idx:
-    if idx <= 0 then false else head (take 1 (drop (idx - 1) chars)) == "\\";
+    let
+      len = length chars;
+      prevIdx = idx - 1;
+    in if idx <= 0 || prevIdx < 0 || prevIdx >= len then
+      false
+    else
+      elemAt chars prevIdx == "\\";
 
   /* Function: parseAlternates
      Type: String -> { prefix: String, alternates: [String], suffix: String }
@@ -75,18 +81,20 @@ in rec {
       # Handle case where no matching close brace
       invalidPattern = closeIdx == -1;
 
-    in if noAlternates || invalidPattern then {
-      prefix = "";
-      alternates = [ pattern ];
-      suffix = "";
-    } else {
-      prefix = substring 0 openIdx pattern;
-      # Split content and handle escapes
-      content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
-      alternates = map unescapeMeta (splitString "," content);
-      suffix =
-        substring (closeIdx + 1) (stringLength pattern - closeIdx - 1) pattern;
-    };
+    in if noAlternates || invalidPattern then
+      let
+        prefix = "";
+        alternates = [ pattern ];
+        suffix = "";
+      in { inherit prefix alternates suffix; }
+    else
+      let
+        prefix = substring 0 openIdx pattern;
+        content = substring (openIdx + 1) (closeIdx - openIdx - 1) pattern;
+        alternates = map unescapeMeta (splitString "," content);
+        suffix = substring (closeIdx + 1) (stringLength pattern - closeIdx - 1)
+          pattern;
+      in { inherit prefix alternates suffix; };
 
   /* Function: expandAlternates
      Type: String -> [String]
