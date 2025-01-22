@@ -132,7 +132,7 @@ in rec {
         [ components.suffix ];
 
       expandOne = alt:
-        map (suffix: unescapeMeta "${components.prefix}${alt}${suffix}")
+        map (suffix: unescapeAlternates "${components.prefix}${alt}${suffix}")
         suffixVariants;
 
     in if noAlts then
@@ -288,6 +288,13 @@ in rec {
       "}"
       ","
     ] pattern;
+
+  /* Function: unescapeAlternates
+      Type: String -> String
+      Unescapes meta characters in a pattern string during alternate expansion. At this stage, we don't want to unescape *, [ and ]
+  */
+  unescapeAlternates = pattern:
+    replaceStrings [ "\\{" "\\}" "\\," ] [ "{" "}" "," ] pattern;
 
   /* Function: isZeroLengthPattern
       Type: String -> Bool
