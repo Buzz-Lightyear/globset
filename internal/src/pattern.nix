@@ -35,7 +35,6 @@ in rec {
     let
       chars = stringToCharacters str;
 
-      # Accumulate characters until we hit an unescaped comma
       collectPart = chars: current: parts:
         if chars == [ ] then
           parts ++ [ current ]
@@ -44,13 +43,10 @@ in rec {
             char = head chars;
             rest = tail chars;
           in if char == "\\" && rest != [ ] then
-          # Skip escape char and include next char
             collectPart (tail rest) (current + char + (head rest)) parts
           else if char == "," && !(findEscapedChar chars 0 ",") then
-          # Found unescaped comma, start new part
             collectPart rest "" (parts ++ [ current ])
           else
-          # Add char to current part
             collectPart rest (current + char) parts;
     in filter (x: x != "") (collectPart chars "" [ ]);
 
@@ -128,7 +124,6 @@ in rec {
   expandAlternates = pattern:
     let
       noAlts = !hasInfix "{" pattern || pattern == "";
-
       components = parseAlternates pattern;
 
       suffixVariants = if hasInfix "{" components.suffix then
@@ -137,11 +132,7 @@ in rec {
         [ components.suffix ];
 
       expandOne = alt:
-        map (suffix:
-          if alt == "" then
-            unescapeMeta "${components.prefix}${suffix}"
-          else
-            unescapeMeta "${components.prefix}${alt}${suffix}") suffixVariants;
+        map (suffix: unescapeMeta "${components.prefix}${alt}${suffix}") suffixVariants;
 
     in if noAlts then
       [ pattern ]

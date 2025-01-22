@@ -69,10 +69,8 @@ in rec {
   */
   globSegments = root: pattern': firstSegment:
     let
-      # First expand any alternates
       expanded = pattern.expandAlternates pattern';
 
-      # Original globSegments logic, renamed to globSegments'
       globSegments' = root: pattern': firstSegment:
         let
           patternStart = pattern.firstUnescapedMeta pattern';
