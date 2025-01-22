@@ -221,9 +221,9 @@ let
       ${testEmptyBrace}
       ${testMultipleBraces}
       ${testBracesWithEscaping}
-      ${testBracesWithEmptyAndEscaped}
       ${testBracesWithEscapedBraces}
       ${testBracesWithEscapedComma}
+      ${testBracesWithEmptyAndEscaped}
       mkdir -p $out
       echo "All tests passed!" > $out/result
     '';
