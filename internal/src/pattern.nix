@@ -48,7 +48,7 @@ in rec {
             collectPart rest "" (parts ++ [ current ])
           else
             collectPart rest (current + char) parts;
-    in filter (x: x != "") (collectPart chars "" [ ]);
+    in (collectPart chars "" [ ]);
 
   /* Function: parseAlternates
      Type: String -> { prefix: String, alternates: [String], suffix: String }
@@ -132,7 +132,8 @@ in rec {
         [ components.suffix ];
 
       expandOne = alt:
-        map (suffix: unescapeMeta "${components.prefix}${alt}${suffix}") suffixVariants;
+        map (suffix: unescapeMeta "${components.prefix}${alt}${suffix}")
+        suffixVariants;
 
     in if noAlts then
       [ pattern ]
