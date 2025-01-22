@@ -175,15 +175,7 @@ let
       "src/main.c"
     ];
 
-  testBracesWithEscaping = runTest "Braces with escaped characters"
-    (normalizeFileset
-      (globset.lib.globs testRoot [ "src/{foob*,foo\\*}.{c,h}" ])) [
-        "src/foo*.c"
-        "src/foobar.c"
-      ];
-
-  testBracesWithEmptyAndEscaped =
-    runTest "Braces with empty option and escaped character"
+  testBracesWithEscapedAsterisk = runTest "Braces with escaped asterisk"
     (normalizeFileset (globset.lib.globs testRoot [ "src/{,foo\\*}.c" ]))
     [ "src/foo*.c" ];
 
@@ -196,6 +188,28 @@ let
   testBracesWithEscapedComma = runTest "Braces with escaped comma"
     (normalizeFileset (globset.lib.globs testRoot [ "src/foo{,\\,}.o" ]))
     [ "src/foo,.o" ];
+
+  testBracesWithEscapedBox = runTest "Braces with escaped box"
+    (normalizeFileset (globset.lib.globs testRoot [ "src/foo{\\[,\\]}.o" ])) [
+      "src/foo[.o"
+      "src/foo].o"
+    ];
+
+  testBracesWithAsteriskInside = runTest "Braces with asterisk inside"
+    (normalizeFileset (globset.lib.globs testRoot [ "src/{foo*,bar*}.x" ])) [
+      "src/bar1.x"
+      "src/bar2.x"
+      "src/foo1.x"
+      "src/foo2.x"
+    ];
+
+  testBracesWithBoxInside = runTest "Braces with box inside" (normalizeFileset
+    (globset.lib.globs testRoot [ "src/{foo[12],bar[12]}.x" ])) [
+      "src/bar1.x"
+      "src/bar2.x"
+      "src/foo1.x"
+      "src/foo2.x"
+    ];
 
   runAllTests =
     pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
@@ -220,10 +234,12 @@ let
       ${testBasicBrace}
       ${testEmptyBrace}
       ${testMultipleBraces}
-      ${testBracesWithEscaping}
+      ${testBracesWithEscapedAsterisk}
       ${testBracesWithEscapedBraces}
       ${testBracesWithEscapedComma}
-      ${testBracesWithEmptyAndEscaped}
+      ${testBracesWithEscapedBox}
+      ${testBracesWithAsteriskInside}
+      ${testBracesWithBoxInside}
       mkdir -p $out
       echo "All tests passed!" > $out/result
     '';
