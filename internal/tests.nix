@@ -92,6 +92,73 @@ in {
       { pattern = "a/**/c"; path = "a/b/c"; expected = true; }
       { pattern = "a/**/d"; path = "a/b/c/d"; expected = true; }
       { pattern = "a/\\**"; path = "a/b/c"; expected = false; }
+
+      # Character Class
+      {
+        pattern = "[abc]";
+        path = "b";
+        expected = true;
+      }
+      {
+        pattern = "[abc]";
+        path = "d";
+        expected = false;
+      }
+      {
+        pattern = "[a-z]";
+        path = "m";
+        expected = true;
+      }
+      {
+        pattern = "[a-z]";
+        path = "3";
+        expected = false;
+      }
+      {
+        pattern = "[^abc]";
+        path = "d";
+        expected = true;
+      }
+      {
+        pattern = "[^abc]";
+        path = "b";
+        expected = false;
+      }
+      {
+        pattern = "[!0-9]";
+        path = "a";
+        expected = true;
+      }
+      {
+        pattern = "[!0-9]";
+        path = "5";
+        expected = false;
+      }
+      {
+        pattern = "foo[abc].txt";
+        path = "fooa.txt";
+        expected = true;
+      }
+      {
+        pattern = "[a-z]/**/*.txt";
+        path = "d/foo/bar.txt";
+        expected = true;
+      }
+      {
+        pattern = "*.[ch]";
+        path = "foo.c";
+        expected = true;
+      }
+      {
+        pattern = "*.[ch]";
+        path = "foo.o";
+        expected = false;
+      }
+      {
+        pattern = "[^]";
+        path = "foo.c";
+        expected = true;
+      }
     ];
   };
 }

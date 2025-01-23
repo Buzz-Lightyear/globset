@@ -1,9 +1,11 @@
 { lib }:
 let
   inherit (builtins)
-    filter head pathExists readDir replaceStrings stringLength substring tail;
+    length filter head pathExists readDir replaceStrings stringLength substring tail elemAt;
 
-  inherit (lib) concatLists mapAttrsToList stringToCharacters;
+  inherit (lib) hasPrefix concatLists mapAttrsToList stringToCharacters;
+
+  inherit (lib.strings) concatStrings charToInt;
 
   inherit (lib.filesystem) pathType;
 
