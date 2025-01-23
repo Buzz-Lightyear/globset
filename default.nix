@@ -108,8 +108,12 @@ let
 
               isEscape = patChar == "\\";
 
+              isClass = patChar == "[";
+
             in if isStar then
               handleStar args
+            else if isClass then
+              handleCharClass args
             else if isEscape && ((patIdx + 1) >= patLen) then
             # todo: ErrBadPattern
               false
@@ -122,6 +126,28 @@ let
               })
             else
               handleBacktrack args;
+
+        /* Function: handleCharClass
+           Type: args -> { nameIdx: Int, patIdx: Int, startOfSegment: Bool }
+           Handles character class pattern matching ([abc], [a-z], [^abc], [!0-9]).
+           Called when a '[' character is encountered in the pattern.
+
+           Examples:
+             Pattern: "src/[fl]*.c" matches "src/foo.c", "src/lib.c"
+        */
+        handleCharClass = args:
+          let
+            classInfo = internal.parseCharClass pattern args.patIdx;
+            matches = internal.matchesCharClass classInfo.content
+              (charAt name args.nameIdx);
+          in if matches then
+            doMatch (args // {
+              nameIdx = args.nameIdx + 1;
+              patIdx = classInfo.endIdx + 1;
+              startOfSegment = false;
+            })
+          else
+            handleBacktrack args;
 
         handleStar = args:
           let
