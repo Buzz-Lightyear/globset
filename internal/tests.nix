@@ -265,9 +265,12 @@ in {
     valueFn = testCase: internal.parseAlternates testCase.pattern;
     tests = [
       { pattern = "{a,b}"; expected = { prefix = ""; alternates = ["a" "b"]; suffix = ""; }; }
+      { pattern = "{å,b}"; expected = { prefix = ""; alternates = ["å" "b"]; suffix = ""; }; }
       { pattern = "pre{a\\,b,c}post"; expected = { prefix = "pre"; alternates = ["a\\,b" "c"]; suffix = "post"; }; }
+      { pattern = "pre{a\\,∫,c}pos†"; expected = { prefix = "pre"; alternates = ["a\\,∫" "c"]; suffix = "pos†"; }; }
       { pattern = "foo\\{bar,baz}"; expected = { prefix = ""; alternates = ["foo\\{bar,baz}"]; suffix = ""; }; }
       { pattern = "{a,b\\,c,d}"; expected = { prefix = ""; alternates = ["a" "b\\,c" "d"]; suffix = ""; }; }
+      { pattern = "{å,b\\,ç,d}"; expected = { prefix = ""; alternates = ["å" "b\\,ç" "d"]; suffix = ""; }; }
     ];
   };
 
