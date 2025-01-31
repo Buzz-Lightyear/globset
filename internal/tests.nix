@@ -248,13 +248,19 @@ in {
     valueFn = testCase: internal.expandAlternates testCase.pattern;
     tests = [
       { pattern = "{a,b}"; expected = ["a" "b"]; }
+      { pattern = "{å,b}"; expected = ["å" "b"]; }
       { pattern = "{a*,b}"; expected = ["a*" "b"]; }
+      { pattern = "{å*,b}"; expected = ["å*" "b"]; }
       { pattern = "{foo.[ch],test_foo.[ch]}"; expected = ["foo.[ch]" "test_foo.[ch]"]; }
+      { pattern = "{foo.[çh],test_foo.[çh]}"; expected = ["foo.[çh]" "test_foo.[çh]"]; }
       { pattern = "{[x-z],b}"; expected = ["[x-z]" "b"]; }
+      { pattern = "{[ƒ-√],b}"; expected = ["[ƒ-√]" "b"]; }
       { pattern = "pre{a\\,b,c}post"; expected = ["prea,bpost" "precpost"]; }
       { pattern = "foo\\{bar,baz}"; expected = ["foo\\{bar,baz}"]; }
       { pattern = "{a,b\\,c,d}"; expected = ["a" "b,c" "d"]; }
+      { pattern = "{a,b\\,c,∂}"; expected = ["a" "b,c" "∂"]; }
       { pattern = "{foo,bar}.{c,h}"; expected = ["foo.c" "foo.h" "bar.c" "bar.h"]; }
+      { pattern = "{foo,bar}.{ç,˙}"; expected = ["foo.ç" "foo.˙" "bar.ç" "bar.˙"]; }
       { pattern = "{,foo}"; expected = ["" "foo"]; }
       { pattern = "pre{a,b}post{1,2}"; expected = ["preapost1" "preapost2" "prebpost1" "prebpost2"]; }
     ];
