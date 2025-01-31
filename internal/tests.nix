@@ -175,6 +175,8 @@ in {
       { str = "\\*a*"; expected = 3; }
       { str = "abc\\*def"; expected = -1; }
       { str = "ab\\*cd*ef"; expected = 6; }
+      #TODO: Fix
+      # { str = "a∫\\*cd*ef"; expected = 6; }
       { str = "no\\*meta"; expected = -1; }
       { str = "\\\\*meta"; expected = 2; }
       { str = "escaped\\"; expected = -1; }
@@ -192,6 +194,8 @@ in {
       { str = "\\{a{"; idx = 0; expected = 3; }
       { str = "abc\\{def"; idx = 0; expected = -1; }
       { str = "ab\\{cd{ef"; idx = 0; expected = 6; }
+      #TODO: Fix
+      # { str = "åb\\{cd{ef"; idx = 0; expected = 6; }
       { str = "escaped\\"; idx = 0; expected = -1; }
       { str = "escaped\\\\"; idx = 0; expected = -1; }
     ];
@@ -207,6 +211,8 @@ in {
       { str = "\\}a}"; idx = 0; expected = 3; }
       { str = "abc\\}def"; idx = 0; expected = -1; }
       { str = "ab\\}cd}ef"; idx = 0; expected = 6; }
+      # TODO: Fix
+      # { str = "a∫\\}cd}ef"; idx = 0; expected = 6; }
       { str = "escaped\\"; idx = 0; expected = -1; }
       { str = "escaped\\\\"; idx = 0; expected = -1; }
     ];
@@ -218,7 +224,10 @@ in {
     tests = [
       { str = ""; idx = 0; len = 0; expected = -1; }
       { str = ",abc"; idx = 0; len = 4; expected = 0; }
+      { str = ",åbc"; idx = 0; len = 4; expected = 0; }
       { str = "abc,def"; idx = 0; len = 7; expected = 3; }
+      # TODO: Fix
+      # { str = "abç,def"; idx = 0; len = 7; expected = 3; }
       { str = "abc\\,def"; idx = 0; len = 9; expected = -1; }
       { str = "abc\\,def,ghi"; idx = 0; len = 13; expected = 8; }
     ];
@@ -229,16 +238,21 @@ in {
     valueFn = testCase: internal.collectParts testCase.str;
     tests = [
       { str = "a,b,c"; expected = ["a" "b" "c"]; }
+      { str = "å,b,c"; expected = ["å" "b" "c"]; }
+      { str = "å,b,cç,d"; expected = ["å" "b" "cç" "d"]; }
       { str = "a\\,b,c"; expected = ["a\\,b" "c"]; }
       { str = "a\\[b,c"; expected = ["a\\[b" "c"]; }
+      { str = "a\\[∫,c"; expected = ["a\\[∫" "c"]; }
       { str = "a\\]b,c"; expected = ["a\\]b" "c"]; }
       { str = "a\\-b,c"; expected = ["a\\-b" "c"]; }
       { str = "a\\*b,c"; expected = ["a\\*b" "c"]; }
       { str = "a,b,[cd]"; expected = ["a" "b" "[cd]"]; }
       { str = "a\\,b,c,d\\{"; expected = ["a\\,b" "c" "d\\{"]; }
+      { str = "a\\,∫,c,ƒ\\{"; expected = ["a\\,∫" "c" "ƒ\\{"]; }
       { str = "foo\\,bar,baz"; expected = ["foo\\,bar" "baz"]; }
       { str = "single"; expected = ["single"]; }
       { str = "\\,"; expected = ["\\,"]; }
+      { str = "\\µ"; expected = ["\\µ"]; }
       { str = ","; expected = ["" ""]; }
     ];
   };
@@ -251,6 +265,7 @@ in {
       { pattern = "{å,b}"; expected = ["å" "b"]; }
       { pattern = "{a*,b}"; expected = ["a*" "b"]; }
       { pattern = "{å*,b}"; expected = ["å*" "b"]; }
+      { pattern = "{å*µ*,b}"; expected = ["å*µ*" "b"]; }
       { pattern = "{foo.[ch],test_foo.[ch]}"; expected = ["foo.[ch]" "test_foo.[ch]"]; }
       { pattern = "{foo.[çh],test_foo.[çh]}"; expected = ["foo.[çh]" "test_foo.[çh]"]; }
       { pattern = "{[x-z],b}"; expected = ["[x-z]" "b"]; }
@@ -272,6 +287,8 @@ in {
     tests = [
       { pattern = "{a,b}"; expected = { prefix = ""; alternates = ["a" "b"]; suffix = ""; }; }
       { pattern = "{å,b}"; expected = { prefix = ""; alternates = ["å" "b"]; suffix = ""; }; }
+      { pattern = "{ßå,b}"; expected = { prefix = ""; alternates = ["ßå" "b"]; suffix = ""; }; }
+      { pattern = "{ßå,b,√∫˜}"; expected = { prefix = ""; alternates = ["ßå" "b" "√∫˜"]; suffix = ""; }; }
       { pattern = "pre{a\\,b,c}post"; expected = { prefix = "pre"; alternates = ["a\\,b" "c"]; suffix = "post"; }; }
       { pattern = "pre{a\\,∫,c}pos†"; expected = { prefix = "pre"; alternates = ["a\\,∫" "c"]; suffix = "pos†"; }; }
       { pattern = "foo\\{bar,baz}"; expected = { prefix = ""; alternates = ["foo\\{bar,baz}"]; suffix = ""; }; }
