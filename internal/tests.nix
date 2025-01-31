@@ -355,6 +355,26 @@ in {
         expected = false;
       }
       {
+        pattern = "[^α-θ]";
+        path = "θ";
+        expected = false;
+      }
+      {
+        pattern = "[^α-θ]";
+        path = "ω";
+        expected = true;
+      }
+      {
+        pattern = "[!α-θ]";
+        path = "θ";
+        expected = false;
+      }
+      {
+        pattern = "[!α-θ]";
+        path = "ω";
+        expected = true;
+      }
+      {
         pattern = "[^abc]";
         path = "d";
         expected = true;
@@ -415,8 +435,18 @@ in {
         expected = true;
       }
       {
+        pattern = "ƒ[\\[\\]].ç";
+        path = "ƒ].ç";
+        expected = true;
+      }
+      {
         pattern = "[ef]\\*.c";
         path = "f*.c";
+        expected = true;
+      }
+      {
+        pattern = "[´f]\\*.c";
+        path = "´*.c";
         expected = true;
       }
     ];
