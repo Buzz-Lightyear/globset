@@ -302,7 +302,7 @@ in rec {
     let
       isNegated = hasPrefix "^" class || hasPrefix "!" class;
       actualClass = if isNegated then substring 1 (stringLength class - 1) class else class;
-      chars = stringToCharacters actualClass;
+      chars = utf8.chars actualClass;
 
       matches =
         if length chars >= 3 && elemAt chars 1 == "-" then
