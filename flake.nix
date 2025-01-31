@@ -37,8 +37,8 @@
       });
 
       packages = forAllSystems (system: {
-        default = (import ./integration-tests.nix { pkgs = pkgsFor system; });
-        integration-tests = (import ./integration-tests.nix { pkgs = pkgsFor system; });
+        default = (import ./integration-tests.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
+        integration-tests = (import ./integration-tests.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
       });
 
       checks = forAllSystems (system: {
@@ -54,7 +54,7 @@
             touch $out
           '';
 
-        integration-tests = (import ./integration-tests.nix { pkgs = pkgsFor system; });
+        integration-tests = (import ./integration-tests.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
       });
     };
   }

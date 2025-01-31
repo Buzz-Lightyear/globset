@@ -1,6 +1,6 @@
-{ pkgs }:
+{ pkgs, utf8 ? pkgs.lib.utf8 }:
 let
-  lib = pkgs.lib;
+  lib = pkgs.lib // { inherit utf8; };
   globset = import ./. { inherit lib; };
   testRoot = ./test-data;
 
