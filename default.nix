@@ -85,11 +85,15 @@ let
     #
     # Examples:
     #   match "a*/b" "abc/b"  # Returns true
+    #   match "a*/∫" "abc/∫"  # Returns true
     #   match "a*/b" "a/c/b"  # Returns false
+    #   match "a*/∫" "a/c/∫"  # Returns false
     #   match "**/c" "a/b/c"  # Returns true
     #   match "**/c" "a/b"    # Returns false
     #   match "a\\*b" "ab"    # Returns false
     #   match "a\\*b" "a*b"   # Returns true
+    #   match "å\\*b" "åb"    # Returns false
+    #   match "å\\*b" "å*b"   # Returns true
     match = pattern: name:
       let
         patLen = stringLength pattern;

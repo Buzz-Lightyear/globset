@@ -282,13 +282,16 @@ in {
       { pattern = "/*"; path = "/debug/"; expected = false; }
       { pattern = "/*"; path = "//"; expected = false; }
       { pattern = "abc"; path = "abc"; expected = true; }
+      { pattern = "åbc"; path = "åbc"; expected = true; }
       { pattern = "*"; path = "abc"; expected = true; }
       { pattern = "*c"; path = "abc"; expected = true; }
+      { pattern = "*ç"; path = "abç"; expected = true; }
       { pattern = "*/"; path = "a/"; expected = true; }
       { pattern = "a*"; path = "a"; expected = true; }
       { pattern = "a*"; path = "abc"; expected = true; }
       { pattern = "a*"; path = "ab/c"; expected = false; }
       { pattern = "a*/b"; path = "abc/b"; expected = true; }
+      { pattern = "å*/b"; path = "åbc/b"; expected = true; }
       { pattern = "a*/b"; path = "a/c/b"; expected = false; }
       { pattern = "a*/c/"; path = "a/b"; expected = false; }
       { pattern = "a*b*c*d*e*"; path = "axbxcxdxe"; expected = true; }
@@ -301,6 +304,7 @@ in {
       # Globstar / doublestar
       { pattern = "**"; path = ""; expected = true; }
       { pattern = "a/**"; path = "a"; expected = true; }
+      { pattern = "å/**"; path = "å"; expected = true; }
       { pattern = "a/**/"; path = "a"; expected = true; }
       { pattern = "a/**"; path = "a/"; expected = true; }
       { pattern = "a/**/"; path = "a/"; expected = true; }
@@ -309,10 +313,12 @@ in {
       { pattern = "**/c"; path = "c"; expected = true; }
       { pattern = "**/c"; path = "b/c"; expected = true; }
       { pattern = "**/c"; path = "a/b/c"; expected = true; }
+      { pattern = "**/ç"; path = "a/b/ç"; expected = true; }
       { pattern = "**/c"; path = "a/b"; expected = false; }
       { pattern = "**/c"; path = "abcd"; expected = false; }
       { pattern = "**/c"; path = "a/abc"; expected = false; }
       { pattern = "a/**/b"; path = "a/b"; expected = true; }
+      { pattern = "å/**/∫"; path = "å/∫"; expected = true; }
       { pattern = "a/**/c"; path = "a/b/c"; expected = true; }
       { pattern = "a/**/d"; path = "a/b/c/d"; expected = true; }
       { pattern = "a/\\**"; path = "a/b/c"; expected = false; }
@@ -329,13 +335,23 @@ in {
         expected = false;
       }
       {
-        pattern = "[a-z]";
-        path = "m";
+        pattern = "[abç]";
+        path = "ç";
         expected = true;
       }
       {
-        pattern = "[a-z]";
-        path = "3";
+        pattern = "[abç]";
+        path = "d";
+        expected = false;
+      }
+      {
+        pattern = "[α-θ]";
+        path = "θ";
+        expected = true;
+      }
+      {
+        pattern = "[α-θ]";
+        path = "ω";
         expected = false;
       }
       {
