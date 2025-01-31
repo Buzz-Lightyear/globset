@@ -124,6 +124,8 @@ in {
     tests = [
       {class = "abc"; char = "b"; expected = true;}
       {class = "abc"; char = "d"; expected = false;}
+      {class = "abç"; char = "ç"; expected = true;}
+      {class = "abc"; char = "ç"; expected = false;}
       {class = "a-c"; char = "c"; expected = true;}
       {class = "a-c"; char = "d"; expected = false;}
       {class = "^0-9"; char = "a"; expected = true;}

@@ -294,6 +294,7 @@ in rec {
 
      Examples:
       matchesCharClass "abc" "b"    => true   # Direct match
+      matchesCharClass "abç" "ç"    => true   # Direct utf-8 match
       matchesCharClass "a-z" "m"    => true   # Range match
       matchesCharClass "^0-9" "a"   => true   # Negated match
       matchesCharClass "!aeiou" "x" => true   # Alternative negation
