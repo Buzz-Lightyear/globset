@@ -151,6 +151,12 @@ in {
       {start = "3"; end = "6"; char = "7"; expected = false;}
       {start = "3"; end = "6"; char = "6"; expected = true;}
       {start = "3"; end = "6"; char = "3"; expected = true;}
+      {start = "α"; end = "ε"; char = "δ"; expected = true;}
+      {start = "α"; end = "γ"; char = "δ"; expected = false;}
+      {start = "←"; end = "↓"; char = "→"; expected = true;}
+      {start = "가"; end = "힣"; char = "박"; expected = true;}
+      {start = "あ"; end = "ん"; char = "き"; expected = true;}
+      {start = "😀"; end = "😎"; char = "😄"; expected = true;}
     ];
   };
 

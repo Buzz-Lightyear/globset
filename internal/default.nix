@@ -326,8 +326,10 @@ in rec {
   */
   inCharRange = start: end: char:
     let
-      startCode = charToInt start;
-      endCode = charToInt end;
-      charCode = charToInt char;
-    in charCode >= startCode && charCode <= endCode;
+      compareChars = a: b:
+        let
+          seqA = utf8.chars a;
+          seqB = utf8.chars b;
+        in builtins.lessThan seqA seqB || seqA == seqB;
+    in compareChars start char && compareChars char end;
 }
