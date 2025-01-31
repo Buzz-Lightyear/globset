@@ -134,6 +134,10 @@ in {
       {class = "!e-g"; char = "f"; expected = false;}
       {class = "^abc"; char = "d"; expected = true;}
       {class = "!abc"; char = "c"; expected = false;}
+      {class = "^ab√"; char = "v"; expected = true;}
+      {class = "!ab√"; char = "v"; expected = true;}
+      {class = "^ab√"; char = "√"; expected = false;}
+      {class = "!ab√"; char = "√"; expected = false;}
     ];
   };
 
