@@ -14,6 +14,7 @@ let
   ;
 
   inherit (lib)
+    utf8
     hasInfix
     hasPrefix
     concatLists
@@ -28,6 +29,12 @@ let
   ;
 
 in rec {
+  decodeUtf8 = str: offset:
+    let
+      remaining = substring offset (stringLength str - offset) str;
+    in
+      head (utf8.chars remaining);
+
   findOpenBrace = str: idx:
     let len = stringLength str;
     in if idx >= len then -1

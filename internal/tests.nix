@@ -31,6 +31,23 @@ let
       );
 
 in {
+  decodeUtf8 = mkSuite {
+    testNameFn = testCase: ''decodeUtf8 "${testCase.str}" ${toString testCase.offset}'';
+    valueFn = testCase: internal.decodeUtf8 testCase.str testCase.offset;
+    tests = [
+      {
+        str = "•foo";
+        offset = 0;
+        expected = "•";
+      }
+      {
+        str = "•foo";
+        offset = 3;
+        expected = "f";
+      }
+    ];
+  };
+
   parseCharClass = mkSuite {
     testNameFn = testCase: ''parseCharClass "${testCase.input}" ${toString testCase.startIdx}'';
     valueFn = testCase: internal.parseCharClass testCase.input testCase.startIdx;
