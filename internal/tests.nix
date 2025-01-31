@@ -128,6 +128,12 @@ in {
       {class = "abc"; char = "ç"; expected = false;}
       {class = "a-c"; char = "c"; expected = true;}
       {class = "a-c"; char = "d"; expected = false;}
+      {class = "α-ε"; char = "δ"; expected = true;}
+      {class = "α-γ"; char = "δ"; expected = false;}
+      {class = "^α-ε"; char = "δ"; expected = false;}
+      {class = "^α-γ"; char = "δ"; expected = true;}
+      {class = "!α-ε"; char = "δ"; expected = false;}
+      {class = "!α-γ"; char = "δ"; expected = true;}
       {class = "^0-9"; char = "a"; expected = true;}
       {class = "^0-9"; char = "9"; expected = false;}
       {class = "!e-g"; char = "d"; expected = true;}
