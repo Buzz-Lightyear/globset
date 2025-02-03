@@ -4,36 +4,41 @@ let
   globset = import ./. { inherit lib; };
   testRoot = ./test-data;
 
+  sanitizePath = p: builtins.unsafeDiscardStringContext (toString p);
+
   normalizeFileset = fileset:
     builtins.sort builtins.lessThan
-    (map (p: lib.removePrefix "${toString testRoot}/" (toString p))
+    (map (p: lib.removePrefix "${toString testRoot}/" (sanitizePath p))
       (lib.fileset.toList fileset));
 
   runTest = name: result: expected:
     pkgs.stdenv.mkDerivation {
-      name = "test-${name}";
-      src = null;
-      dontUnpack = true;
-      doCheck = true;
-      checkPhase = ''
-        #!/usr/bin/env bash
+      name = "test-${lib.strings.sanitizeDerivationName name}";
+      passAsFile = [ "expectedJson" "resultJson" ];
+      expectedJson = builtins.toJSON expected;
+      resultJson = builtins.toJSON result;
+
+      builder = pkgs.writeShellScript "builder.sh" ''
+        source $stdenv/setup
+        # Create output directory
+        mkdir -p $out
         echo "Testing ${name}..."
-        expected='${builtins.toJSON expected}'
-        result='${builtins.toJSON result}'
-        if [ "$result" = "$expected" ]; then
-          echo "PASS: ${name}"
+        # Compare the JSON files
+        if diff -u "$expectedJsonPath" "$resultJsonPath" > $out/diff; then
+          echo "PASS: ${name}" | tee $out/result
           exit 0
         else
-          echo "FAIL: ${name}"
-          echo "Expected: $expected"
-          echo "Got: $result"
+          echo "FAIL: ${name}" | tee $out/result
+          echo "Expected:" | tee -a $out/result
+          cat "$expectedJsonPath" | tee -a $out/result
+          echo "Got:" | tee -a $out/result
+          cat "$resultJsonPath" | tee -a $out/result
           exit 1
         fi
       '';
 
-      buildPhase = ''
-        touch $out
-      '';
+      dontUnpack = true;
+      nativeBuildInputs = [ pkgs.diffutils ];
     };
 
   testCases = {
@@ -47,8 +52,8 @@ let
 
     testUTFChars = runTest "globs files with an utf8 char match constraint"
       (normalizeFileset (globset.globs testRoot [ "gø.*" "**/*.gø" ])) [
-        "gø.foo"
         "foo.gø"
+        "gø.foo"
       ];
 
     testCProject = runTest "globs all C files that aren't tests"
@@ -380,17 +385,7 @@ let
       ];
   };
 
-  runAllTests =
-    pkgs.runCommand "run-all-tests" { nativeBuildInputs = [ pkgs.bash ]; } ''
-      ${builtins.concatStringsSep "\n" (builtins.attrValues testCases)}
-      mkdir -p $out
-      echo "All tests passed!" > $out/result
-    '';
+  runAllTests = pkgs.linkFarm "run-all-tests"
+    (map (drv: { name = drv.name; path = drv; }) (builtins.attrValues testCases));
 
-in pkgs.runCommand "run-all-tests" {
-  nativeBuildInputs = [ pkgs.bash ];
-  buildInputs = builtins.attrValues testCases;
-} ''
-  mkdir -p $out
-  echo "All tests passed!" > $out/result
-''
+in runAllTests
