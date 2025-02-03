@@ -39,6 +39,8 @@
       packages = forAllSystems (system: {
         default = (import ./integration-tests.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
         integration-tests = (import ./integration-tests.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
+        # Add the debug package
+        debug-glob = (import ./debug-glob.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
       });
 
       checks = forAllSystems (system: {
@@ -57,4 +59,4 @@
         integration-tests = (import ./integration-tests.nix { pkgs = pkgsFor system; utf8 = utf8.lib; });
       });
     };
-  }
+}
