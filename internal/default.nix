@@ -50,9 +50,18 @@ in rec {
     in find idx;
 
   findCloseBrace = str: idx:
-    if idx >= stringLength str then -1
-    else if substring idx 1 str == "}" && (idx == 0 || (idx > 0 && substring (idx - 1) 1 str != "\\")) then idx
-    else findCloseBrace str (idx + 1);
+    let
+      find = i:
+        if i >= stringLength str then -1
+        else
+          let
+            curChar = decodeUtf8 str i;
+            prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
+            isEscaped = prevChar == "\\";
+          in
+            if curChar == "}" && !isEscaped then i
+            else find (i + 1);
+    in find idx;
   
   findNextComma = str: idx: len:
     if idx >= len then -1
