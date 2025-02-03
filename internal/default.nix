@@ -35,7 +35,7 @@ in rec {
     in
       head (utf8.chars remaining);
 
-  findOpenBrace = str: idx:
+  findBrace = str: idx: brace:
     let
       find = i:
         if i >= stringLength str then -1
@@ -45,21 +45,7 @@ in rec {
             prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
             isEscaped = prevChar == "\\";
           in
-            if curChar == "{" && !isEscaped then i
-            else find (i + 1);
-    in find idx;
-
-  findCloseBrace = str: idx:
-    let
-      find = i:
-        if i >= stringLength str then -1
-        else
-          let
-            curChar = decodeUtf8 str i;
-            prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
-            isEscaped = prevChar == "\\";
-          in
-            if curChar == "}" && !isEscaped then i
+            if curChar == brace && !isEscaped then i
             else find (i + 1);
     in find idx;
   
@@ -87,8 +73,8 @@ in rec {
 
   parseAlternates = pattern:
     let
-      openIdx = findOpenBrace pattern 0;
-      closeIdx = if openIdx == -1 then -1 else findCloseBrace pattern (openIdx + 1);
+      openIdx = findBrace pattern 0 "{";
+      closeIdx = if openIdx == -1 then -1 else findBrace pattern (openIdx + 1) "}";
     in if openIdx == -1 || closeIdx == -1 then { prefix = ""; alternates = [ pattern ]; suffix = ""; } 
     else {
       prefix = substring 0 openIdx pattern;

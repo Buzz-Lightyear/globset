@@ -184,35 +184,32 @@ in {
     ];
   };
 
-  findOpenBrace = mkSuite {
-    testNameFn = testCase: ''findOpenBrace "${testCase.str}" "${toString testCase.idx}"'';
-    valueFn = testCase: internal.findOpenBrace testCase.str testCase.idx;
+  findBrace = mkSuite {
+    testNameFn = testCase: ''findBrace "${testCase.str}" "${toString testCase.idx}" "${testCase.brace}"'';
+    valueFn = testCase: internal.findBrace testCase.str testCase.idx testCase.brace;
     tests = [
-      { str = ""; idx = 0; expected = -1; }
-      { str = "{abc"; idx = 0; expected = 0; }
-      { str = "{abc"; idx = 1; expected = -1; }
-      { str = "\\{a{"; idx = 0; expected = 3; }
-      { str = "abc\\{def"; idx = 0; expected = -1; }
-      { str = "ab\\{cd{ef"; idx = 0; expected = 6; }
-      { str = "åb\\{cd{ef"; idx = 0; expected = 7; }
-      { str = "escaped\\"; idx = 0; expected = -1; }
-      { str = "escaped\\\\"; idx = 0; expected = -1; }
-    ];
-  };
-
-  findCloseBrace = mkSuite {
-    testNameFn = testCase: ''findCloseBrace "${testCase.str}" "${toString testCase.idx}"'';
-    valueFn = testCase: internal.findCloseBrace testCase.str testCase.idx;
-    tests = [
-      { str = ""; idx = 0; expected = -1; }
-      { str = "}abc"; idx = 0; expected = 0; }
-      { str = "}abc"; idx = 1; expected = -1; }
-      { str = "\\}a}"; idx = 0; expected = 3; }
-      { str = "abc\\}def"; idx = 0; expected = -1; }
-      { str = "ab\\}cd}ef"; idx = 0; expected = 6; }
-      { str = "aå\\}cd}ef"; idx = 0; expected = 7; }
-      { str = "escaped\\"; idx = 0; expected = -1; }
-      { str = "escaped\\\\"; idx = 0; expected = -1; }
+      { str = ""; idx = 0; brace = "{"; expected = -1; }
+      { str = "{abc"; idx = 0; brace = "{"; expected = 0; }
+      { str = "{abc"; idx = 1; brace = "{"; expected = -1; }
+      { str = "\\{a{"; idx = 0; brace = "{"; expected = 3; }
+      { str = "abc\\{def"; idx = 0; brace = "{"; expected = -1; }
+      { str = "ab\\{cd{ef"; idx = 0; brace = "{"; expected = 6; }
+      { str = "åb\\{cd{ef"; idx = 0; brace = "{"; expected = 7; }
+      { str = "å{"; idx = 0; brace = "{"; expected = 2; }
+      { str = "∫{"; idx = 0; brace = "{"; expected = 3; }
+      { str = "escaped\\"; idx = 0; brace = "{"; expected = -1; }
+      { str = "escaped\\\\"; idx = 0; brace = "{"; expected = -1; }
+      { str = ""; idx = 0; brace = "}"; expected = -1; }
+      { str = "}abc"; idx = 0; brace = "}"; expected = 0; }
+      { str = "}abc"; idx = 1; brace = "}"; expected = -1; }
+      { str = "\\}a}"; idx = 0; brace = "}"; expected = 3; }
+      { str = "abc\\}def"; idx = 0; brace = "}"; expected = -1; }
+      { str = "ab\\}cd}ef"; idx = 0; brace = "}"; expected = 6; }
+      { str = "aå\\}cd}ef"; idx = 0; brace = "}"; expected = 7; }
+      { str = "å}"; idx = 0; brace = "}"; expected = 2; }
+      { str = "∫}"; idx = 0; brace = "}"; expected = 3; }
+      { str = "escaped\\"; idx = 0; brace = "}"; expected = -1; }
+      { str = "escaped\\\\"; idx = 0; brace = "}"; expected = -1; }
     ];
   };
 
