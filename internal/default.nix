@@ -35,7 +35,25 @@ in rec {
     in
       head (utf8.chars remaining);
 
-  findUnescapedChar = str: idx: brace:
+  firstUnescapedMeta = str:
+    let
+      chars = stringToCharacters str;
+
+      find = i: chars:
+        if chars == [] then -1
+        else let
+          char = head chars;
+          rest = tail chars;
+        in
+          if char == "*" || char == "[" then i
+          else if char == "\\" then
+            if rest == [] then -1
+            else find (i + 2) (tail rest)
+          else find (i + 1) rest;
+
+    in find 0 chars;
+
+  findUnescapedChar = str: idx: char:
     let
       find = i:
         if i >= stringLength str then -1
@@ -45,7 +63,7 @@ in rec {
             prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
             isEscaped = prevChar == "\\";
           in
-            if curChar == brace && !isEscaped then i
+            if curChar == char && !isEscaped then i
             else find (i + 1);
     in find idx;
 
@@ -189,24 +207,6 @@ in rec {
     || pattern == "/**"
     || pattern == "**/"
     || pattern == "/**/";
-
-  firstUnescapedMeta = str:
-    let
-      chars = stringToCharacters str;
-
-      find = i: chars:
-        if chars == [] then -1
-        else let
-          char = head chars;
-          rest = tail chars;
-        in
-          if char == "*" || char == "[" then i
-          else if char == "\\" then
-            if rest == [] then -1
-            else find (i + 2) (tail rest)
-          else find (i + 1) rest;
-
-    in find 0 chars;
       
   lastIndexSlash = str:
     let
