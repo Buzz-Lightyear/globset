@@ -52,12 +52,14 @@ let
 
     testUTFChars = runTest "globs files with an utf8 char match constraint"
       (normalizeFileset (globset.globs testRoot [ "gø.*" "**/*.gø" ])) [
+        "foo*.gø"
         "foo.gø"
         "gø.foo"
       ];
     
     testUTFCharsWithNegation = runTest "globs files with an utf8 char match constraint with negation"
       (normalizeFileset (globset.globs testRoot [ "gø.*" "**/*.gø" "!*.foo" ])) [
+        "foo*.gø"
         "foo.gø"
       ];
   
