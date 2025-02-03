@@ -45,6 +45,12 @@ let
         "pkg/lib/utils.go"
       ];
 
+    testUTFChars = runTest "globs files with an utf8 char match constraint"
+      (normalizeFileset (globset.globs testRoot [ "gø.*" "**/*.gø" ])) [
+        "gø.foo"
+        "foo.gø"
+      ];
+
     testCProject = runTest "globs all C files that aren't tests"
       (normalizeFileset
         (globset.globs testRoot [ "**/*.c" "**/*.h" "!**/test_*.c" ])) [
