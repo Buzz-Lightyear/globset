@@ -47,7 +47,27 @@ in {
       }
     ];
   };
-  #TODO: Tests for lastIndexSlash
+  
+  lastIndexSlash = mkSuite {
+    testNameFn = testCase: ''lastIndexSlash "${testCase.str}"'';
+    valueFn = testCase: internal.lastIndexSlash testCase.str;
+    tests = [
+      { str = ""; expected = -1; }
+      { str = "/"; expected = 0; }
+      { str = "a/b/c"; expected = 3; }
+      # TODO
+      # { str = "å/b/c"; expected = 2; }
+      # { str = "å/∫/ç"; expected = 4; }
+      { str = "a\\/b/c"; expected = 4; }
+      { str = "a\\/b\\/c"; expected = -1; }
+      { str = "a/b\\/"; expected = 1; }
+      #TODO
+      # { str = "å/b\\/"; expected = 2; }
+      { str = "a\\//b"; expected = 3; }
+      { str = "\\//b"; expected = 2; }
+    ];
+  };
+
   parseCharClass = mkSuite {
     testNameFn = testCase: ''parseCharClass "${testCase.input}" ${toString testCase.startIdx}'';
     valueFn = testCase: internal.parseCharClass testCase.input testCase.startIdx;

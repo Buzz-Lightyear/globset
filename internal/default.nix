@@ -196,17 +196,16 @@ in rec {
     let
       len = stringLength str;
 
-      find = i:
+      isUnescapedSlash = i:
+        (substring i 1 str == "/") &&
+        (i == 0 || substring (i - 1) 1 str != "\\");
+
+      findLastSlash = i:
         if i < 0 then -1
-        else
-          let
-            curChar = decodeUtf8 str i;
-            prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
-            isEscaped = prevChar == "\\" && (i < 2 || decodeUtf8 str (i - 2) != "\\");
-          in
-            if curChar == "/" && !isEscaped then i
-            else find (i - 1);
-    in find (len - 1);
+        else if isUnescapedSlash i then i
+        else findLastSlash (i - 1);
+
+    in findLastSlash (len - 1);
 
   unescapeMeta = chars: str:
     replaceStrings 
