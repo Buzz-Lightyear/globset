@@ -35,7 +35,7 @@ in rec {
     in
       head (utf8.chars remaining);
 
-  findBrace = str: idx: brace:
+  findUnescapedChar = str: idx: brace:
     let
       find = i:
         if i >= stringLength str then -1
@@ -54,7 +54,7 @@ in rec {
       len = stringLength str;
       doCollect = start: parts:
         let
-          nextComma = findBrace str start ",";
+          nextComma = findUnescapedChar str start ",";
           segment = if start < 0 || len < 0 then ""
                   else substring start (if nextComma == -1
                                       then len - start
@@ -66,8 +66,8 @@ in rec {
 
   parseAlternates = pattern:
     let
-      openIdx = findBrace pattern 0 "{";
-      closeIdx = if openIdx == -1 then -1 else findBrace pattern (openIdx + 1) "}";
+      openIdx = findUnescapedChar pattern 0 "{";
+      closeIdx = if openIdx == -1 then -1 else findUnescapedChar pattern (openIdx + 1) "}";
     in if openIdx == -1 || closeIdx == -1 then { prefix = ""; alternates = [ pattern ]; suffix = ""; } 
     else {
       prefix = substring 0 openIdx pattern;
