@@ -194,8 +194,7 @@ in {
       { str = "\\{a{"; idx = 0; expected = 3; }
       { str = "abc\\{def"; idx = 0; expected = -1; }
       { str = "ab\\{cd{ef"; idx = 0; expected = 6; }
-      #TODO: Fix
-      # { str = "åb\\{cd{ef"; idx = 0; expected = 6; }
+      { str = "åb\\{cd{ef"; idx = 0; expected = 7; }
       { str = "escaped\\"; idx = 0; expected = -1; }
       { str = "escaped\\\\"; idx = 0; expected = -1; }
     ];
