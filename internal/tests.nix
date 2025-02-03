@@ -54,11 +54,13 @@ in {
     tests = [
       { str = ""; expected = -1; }
       { str = "/"; expected = 0; }
+      { str = "å/"; expected = 2; }
+      { str = "∫/"; expected = 3; }
       { str = "a/b/c"; expected = 3; }
       { str = "å/b/c"; expected = 4; }
       { str = "å/∫/ç"; expected = 6; }
       { str = "a\\/b/c"; expected = 4; }
-      { str = "a\\/b\\/c"; expected = -1; }
+      { str = "√\\/b\\/c"; expected = -1; }
       { str = "a/b\\/"; expected = 1; }
       { str = "å/b\\/"; expected = 2; }
       { str = "a\\//b"; expected = 3; }
@@ -80,6 +82,15 @@ in {
         };
       }
       {
+        input = "[åbç]def";
+        startIdx = 0;
+        expected = {
+          content = "åbç";
+          endIdx = 6;
+          isNegated = false;
+        };
+      }
+      {
         input = "x[^0-9]";
         startIdx = 1;
         expected = {
@@ -89,11 +100,29 @@ in {
         };
       }
       {
+        input = "x[^º-ª]";
+        startIdx = 1;
+        expected = {
+          content = "º-ª";
+          endIdx = 8;
+          isNegated = true;
+        };
+      }
+      {
         input = "[a\\]b]";
         startIdx = 0;
         expected = {
           content = "a\\]b";
           endIdx = 5;
+          isNegated = false;
+        };
+      }
+      {
+        input = "[å\\]∫]";
+        startIdx = 0;
+        expected = {
+          content = "å\\]∫";
+          endIdx = 8;
           isNegated = false;
         };
       }
