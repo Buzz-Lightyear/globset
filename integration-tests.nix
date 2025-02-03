@@ -157,10 +157,20 @@ let
         "src/foobar.c"
         "src/lib.c"
       ];
+    
+    testCharClassWithUTF8 = runTest "character class matching w/ utf-8"
+      (normalizeFileset (globset.glob testRoot "*.g[ø¬˚]")) [
+        "foo*.gø"
+        "foo.gø"
+      ];
 
     testCharClassWithEscaping = runTest "character class matching w/ escaping"
       (normalizeFileset (globset.glob testRoot "src/[e-g]oo\\*.c"))
       [ "src/foo*.c" ];
+    
+    testCharClassWithEscapingAndUTF8 = runTest "character class matching w/ escaping and utf8"
+      (normalizeFileset (globset.glob testRoot "[e-g]oo\\*.[f-h][ø¬˚]"))
+      [ "foo*.gø" ];
 
     testCharClassWithEscaping2 = runTest "character class matching w/ escaping 2"
       (normalizeFileset (globset.glob testRoot "src/[e-g]oo\\-.[oc]"))
@@ -174,6 +184,12 @@ let
         "src/foo[.o"
         "src/foo].o"
       ];
+    
+    testCharClassWithEscapingInsideClassAndUTF8 =
+      runTest "character class matching w/ escaping inside class and utf8"
+      (normalizeFileset (globset.glob testRoot "[e-g]oo[\\*].gø")) [
+        "foo*.gø"
+      ];
 
     testMultipleCharClassWithEscaping =
       runTest "multiple character class matching w/ escaping"
@@ -183,6 +199,10 @@ let
     testCharRange = runTest "character range matching"
       (normalizeFileset (globset.glob testRoot "**/[a-m]*.py"))
       [ "scripts/main.py" ];
+    
+    testCharRangeWithUTF8 = runTest "character range matching with utf8"
+      (normalizeFileset (globset.glob testRoot "**/*.g[ø-ÿ]"))
+      [ "foo*.gø" "foo.gø" ];
 
     testNegatedClass = runTest "negated character class"
       (normalizeFileset (globset.glob testRoot "src/[^t]*.c")) [
@@ -190,6 +210,16 @@ let
         "src/foobar.c"
         "src/lib.c"
         "src/main.c"
+      ];
+    
+    testNegatedClassWithUTF8 = runTest "negated character class w/ utf8"
+      (normalizeFileset (globset.glob testRoot "g[^˜∂∆].foo")) [
+        "gø.foo"
+      ];
+    
+    testAlternateNegatedClassWithUTF8 = runTest "negated character class w/ utf8"
+      (normalizeFileset (globset.glob testRoot "g[!˜∂∆].foo")) [
+        "gø.foo"
       ];
 
     testNegatedClassMultiple = runTest "negated character class multiple"
@@ -244,6 +274,13 @@ let
         "src/lib.h"
         "src/main.c"
       ];
+    
+    testBasicBraceWithUTF8 = runTest "simple brace expansion w/ utf8"
+      (normalizeFileset (globset.glob testRoot "g{o,ø}.*")) [
+        "go.mod"
+        "go.sum"
+        "gø.foo"
+      ];
 
     testEmptyBrace = runTest "empty alternatives in brace"
       (normalizeFileset (globset.glob testRoot "src/{,test/}*.c")) [
@@ -253,12 +290,24 @@ let
         "src/main.c"
         "src/test/test_main.c"
       ];
+    
+    testEmptyBraceWithUTF8 = runTest "empty alternatives in brace w/ utf-8"
+      (normalizeFileset (globset.glob testRoot "foo{,\\*}.gø")) [
+        "foo*.gø"
+        "foo.gø"
+      ];
 
     testMultipleBraces = runTest "multiple brace expressions" (normalizeFileset
       (globset.glob testRoot "{src,scripts}/{main,utils}.{c,py}")) [
         "scripts/main.py"
         "scripts/utils.py"
         "src/main.c"
+      ];
+    
+    testMultipleBracesWithUTF8 = runTest "multiple brace expressions w/ utf-8" (normalizeFileset
+      (globset.glob testRoot "{foo,foo*}.{go,gø}")) [
+        "foo*.gø"
+        "foo.gø"
       ];
 
     testBracesWithEscapedAsterisk = runTest "Braces with escaped asterisk"
@@ -304,6 +353,12 @@ let
           "src/bar2.x"
           "src/foo1.x"
           "src/foo2.x"
+        ];
+    
+    testBracesWithRangeInsideAndUTF8 = runTest "Braces with range inside w/ utf8"
+      (normalizeFileset
+        (globset.globs testRoot [ "foo.{g[ø-ÿ]}" ])) [
+          "foo.gø"
         ];
 
     testBracesWithEmptyResult = runTest "Braces with empty result"
