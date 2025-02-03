@@ -210,20 +210,13 @@ in {
       { str = "∫}"; idx = 0; brace = "}"; expected = 3; }
       { str = "escaped\\"; idx = 0; brace = "}"; expected = -1; }
       { str = "escaped\\\\"; idx = 0; brace = "}"; expected = -1; }
-    ];
-  };
-
-  findNextComma = mkSuite {
-    testNameFn = testCase: ''findNextComma "${testCase.str}" "${toString testCase.idx}"'';
-    valueFn = testCase: internal.findNextComma testCase.str testCase.idx;
-    tests = [
-      { str = ""; idx = 0; expected = -1; }
-      { str = ",abc"; idx = 0; expected = 0; }
-      { str = ",åbc"; idx = 0; expected = 0; }
-      { str = "abc,def"; idx = 0; expected = 3; }
-      { str = "abå,def"; idx = 0; expected = 4; }
-      { str = "abc\\,def"; idx = 0; expected = -1; }
-      { str = "abc\\,def,ghi"; idx = 0; expected = 8; }
+      { str = ""; idx = 0; brace = ","; expected = -1; }
+      { str = ",abc"; idx = 0; brace = ","; expected = 0; }
+      { str = ",åbc"; idx = 0; brace = ","; expected = 0; }
+      { str = "abc,def"; idx = 0; brace = ","; expected = 3; }
+      { str = "abå,def"; idx = 0; brace = ","; expected = 4; }
+      { str = "abc\\,def"; idx = 0; brace = ","; expected = -1; }
+      { str = "abc\\,def,ghi"; idx = 0; brace = ","; expected = 8; }
     ];
   };
 

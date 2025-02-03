@@ -48,16 +48,13 @@ in rec {
             if curChar == brace && !isEscaped then i
             else find (i + 1);
     in find idx;
-  
-  findNextComma = str: idx:
-    findBrace str idx ",";
 
   collectParts = str:
     let
       len = stringLength str;
       doCollect = start: parts:
         let
-          nextComma = findNextComma str start;
+          nextComma = findBrace str start ",";
           segment = if start < 0 || len < 0 then ""
                   else substring start (if nextComma == -1
                                       then len - start
