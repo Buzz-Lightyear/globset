@@ -195,28 +195,13 @@ in rec {
   lastIndexSlash = str:
     let
       len = stringLength str;
-
-      isUnescapedSlash = i:
-        (substring i 1 str == "/") &&
-        (i == 0 || substring (i - 1) 1 str != "\\");
-
-      findLastSlash = i:
+      find = i:
         if i < 0 then -1
-        else if isUnescapedSlash i then i
-        else findLastSlash (i - 1);
+        else
+          let pos = findUnescapedChar (substring 0 (i + 1) str) 0 [ "/" ];
+          in if pos != -1 then pos else find (i - 1);
 
-    in findLastSlash (len - 1);
-
-  findNextSeparator = str: startIdx:
-    let
-      len = stringLength str;
-
-      findSeparator = i:
-        if i >= len then -1
-        else if substring i 1 str == "/" then i
-        else findSeparator (i + 1);
-
-    in findSeparator startIdx;
+    in find (len - 1);
 
   unescapeMeta = chars: str:
     replaceStrings 
@@ -238,28 +223,12 @@ in rec {
   parseCharClass = str: startIdx:
     let
       len = stringLength str;
-
-      findClosingBracket = idx:
-        if idx >= len then
-          -1
-        else
-          let
-            char = substring idx 1 str;
-            nextChar =
-              if (idx + 1) < len then substring (idx + 1) 1 str else "";
-          in if char == "\\" && nextChar == "]" then
-            findClosingBracket (idx + 2)
-          else if char == "]" && idx > startIdx + 1 then
-            idx
-          else
-            findClosingBracket (idx + 1);
-
-      endIdx = findClosingBracket (startIdx + 1);
+      endIdx = findUnescapedChar str (startIdx + 1) [ "]" ];
       rawContent = substring (startIdx + 1) (endIdx - startIdx - 1) str;
-      firstChar = substring (startIdx + 1) 1 str;
+      firstChar = decodeUtf8 str (startIdx + 1);
 
       content =
-        let chars = stringToCharacters rawContent;
+        let chars = utf8.chars rawContent;
         isNegation = firstChar == "^" || firstChar == "!";
         skipFirst = if isNegation then tail chars else chars;
       in concatStrings skipFirst;

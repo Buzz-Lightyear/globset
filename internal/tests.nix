@@ -47,7 +47,7 @@ in {
       }
     ];
   };
-
+  #TODO: Tests for lastIndexSlash
   parseCharClass = mkSuite {
     testNameFn = testCase: ''parseCharClass "${testCase.input}" ${toString testCase.startIdx}'';
     valueFn = testCase: internal.parseCharClass testCase.input testCase.startIdx;

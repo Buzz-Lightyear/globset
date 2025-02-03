@@ -224,7 +224,7 @@ let
             starNameChar = charAt name args.starBacktrack.nameIdx;
 
             nextSeparatorIdx =
-              internal.findNextSeparator name args.doublestarBacktrack.nameIdx;
+              internal.findUnescapedChar name args.doublestarBacktrack.nameIdx [ "/" ];
 
             doublestarBacktrack = {
               inherit (args.doublestarBacktrack) patIdx;
