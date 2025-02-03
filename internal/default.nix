@@ -197,8 +197,8 @@ in rec {
       len = stringLength str;
 
       isUnescapedSlash = i:
-        (substring i 1 str == "/") &&
-        (i == 0 || substring (i - 1) 1 str != "\\");
+        (decodeUtf8 str i == "/") &&
+        (i == 0 || decodeUtf8 str (i - 1) != "\\");
 
       findLastSlash = i:
         if i < 0 then -1
