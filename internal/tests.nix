@@ -214,17 +214,16 @@ in {
   };
 
   findNextComma = mkSuite {
-    testNameFn = testCase: ''findNextComma "${testCase.str}" "${toString testCase.idx}" "${toString testCase.len}"'';
-    valueFn = testCase: internal.findNextComma testCase.str testCase.idx testCase.len;
+    testNameFn = testCase: ''findNextComma "${testCase.str}" "${toString testCase.idx}"'';
+    valueFn = testCase: internal.findNextComma testCase.str testCase.idx;
     tests = [
-      { str = ""; idx = 0; len = 0; expected = -1; }
-      { str = ",abc"; idx = 0; len = 4; expected = 0; }
-      { str = ",åbc"; idx = 0; len = 4; expected = 0; }
-      { str = "abc,def"; idx = 0; len = 7; expected = 3; }
-      # TODO: Fix
-      # { str = "abç,def"; idx = 0; len = 7; expected = 3; }
-      { str = "abc\\,def"; idx = 0; len = 9; expected = -1; }
-      { str = "abc\\,def,ghi"; idx = 0; len = 13; expected = 8; }
+      { str = ""; idx = 0; expected = -1; }
+      { str = ",abc"; idx = 0; expected = 0; }
+      { str = ",åbc"; idx = 0; expected = 0; }
+      { str = "abc,def"; idx = 0; expected = 3; }
+      { str = "abå,def"; idx = 0; expected = 4; }
+      { str = "abc\\,def"; idx = 0; expected = -1; }
+      { str = "abc\\,def,ghi"; idx = 0; expected = 8; }
     ];
   };
 

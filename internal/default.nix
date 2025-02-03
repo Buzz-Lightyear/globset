@@ -49,19 +49,15 @@ in rec {
             else find (i + 1);
     in find idx;
   
-  findNextComma = str: idx: len:
-    if idx >= len then -1
-    else if substring idx 1 str == "," && 
-          (idx == 0 || substring (idx - 1) 1 str != "\\") 
-    then idx
-    else findNextComma str (idx + 1) len;
+  findNextComma = str: idx:
+    findBrace str idx ",";
 
   collectParts = str:
     let
       len = stringLength str;
       doCollect = start: parts:
         let
-          nextComma = findNextComma str start len;
+          nextComma = findNextComma str start;
           segment = if start < 0 || len < 0 then ""
                   else substring start (if nextComma == -1
                                       then len - start
