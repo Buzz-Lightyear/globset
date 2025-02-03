@@ -185,38 +185,38 @@ in {
   };
 
   findUnescapedChar = mkSuite {
-    testNameFn = testCase: ''findUnescapedChar "${testCase.str}" "${toString testCase.idx}" "${testCase.char}"'';
-    valueFn = testCase: internal.findUnescapedChar testCase.str testCase.idx testCase.char;
+    testNameFn = testCase: ''findUnescapedChar "${testCase.str}" "${toString testCase.idx}" "${builtins.toJSON testCase.chars}"'';
+    valueFn = testCase: internal.findUnescapedChar testCase.str testCase.idx testCase.chars;
     tests = [
-      { str = ""; idx = 0; char = "{"; expected = -1; }
-      { str = "{abc"; idx = 0; char = "{"; expected = 0; }
-      { str = "{abc"; idx = 1; char = "{"; expected = -1; }
-      { str = "\\{a{"; idx = 0; char = "{"; expected = 3; }
-      { str = "abc\\{def"; idx = 0; char = "{"; expected = -1; }
-      { str = "ab\\{cd{ef"; idx = 0; char = "{"; expected = 6; }
-      { str = "åb\\{cd{ef"; idx = 0; char = "{"; expected = 7; }
-      { str = "å{"; idx = 0; char = "{"; expected = 2; }
-      { str = "∫{"; idx = 0; char = "{"; expected = 3; }
-      { str = "escaped\\"; idx = 0; char = "{"; expected = -1; }
-      { str = "escaped\\\\"; idx = 0; char = "{"; expected = -1; }
-      { str = ""; idx = 0; char = "}"; expected = -1; }
-      { str = "}abc"; idx = 0; char = "}"; expected = 0; }
-      { str = "}abc"; idx = 1; char = "}"; expected = -1; }
-      { str = "\\}a}"; idx = 0; char = "}"; expected = 3; }
-      { str = "abc\\}def"; idx = 0; char = "}"; expected = -1; }
-      { str = "ab\\}cd}ef"; idx = 0; char = "}"; expected = 6; }
-      { str = "aå\\}cd}ef"; idx = 0; char = "}"; expected = 7; }
-      { str = "å}"; idx = 0; char = "}"; expected = 2; }
-      { str = "∫}"; idx = 0; char = "}"; expected = 3; }
-      { str = "escaped\\"; idx = 0; char = "}"; expected = -1; }
-      { str = "escaped\\\\"; idx = 0; char = "}"; expected = -1; }
-      { str = ""; idx = 0; char = ","; expected = -1; }
-      { str = ",abc"; idx = 0; char = ","; expected = 0; }
-      { str = ",åbc"; idx = 0; char = ","; expected = 0; }
-      { str = "abc,def"; idx = 0; char = ","; expected = 3; }
-      { str = "abå,def"; idx = 0; char = ","; expected = 4; }
-      { str = "abc\\,def"; idx = 0; char = ","; expected = -1; }
-      { str = "abc\\,def,ghi"; idx = 0; char = ","; expected = 8; }
+      { str = ""; idx = 0; chars = [ "{" ]; expected = -1; }
+      { str = "{abc"; idx = 0; chars = [ "{" ]; expected = 0; }
+      { str = "{abc"; idx = 1; chars = [ "{" ]; expected = -1; }
+      { str = "\\{a{"; idx = 0; chars = [ "{" ]; expected = 3; }
+      { str = "abc\\{def"; idx = 0; chars = [ "{" ]; expected = -1; }
+      { str = "ab\\{cd{ef"; idx = 0; chars = [ "{" ]; expected = 6; }
+      { str = "åb\\{cd{ef"; idx = 0; chars = [ "{" ]; expected = 7; }
+      { str = "å{"; idx = 0; chars = [ "{" ]; expected = 2; }
+      { str = "∫{"; idx = 0; chars = [ "{" ]; expected = 3; }
+      { str = "escaped\\"; idx = 0; chars = [ "{" ]; expected = -1; }
+      { str = "escaped\\\\"; idx = 0; chars = [ "{" ]; expected = -1; }
+      { str = ""; idx = 0; chars = [ "}" ]; expected = -1; }
+      { str = "}abc"; idx = 0; chars = [ "}" ]; expected = 0; }
+      { str = "}abc"; idx = 1; chars = [ "}" ]; expected = -1; }
+      { str = "\\}a}"; idx = 0; chars = [ "}" ]; expected = 3; }
+      { str = "abc\\}def"; idx = 0; chars = [ "}" ]; expected = -1; }
+      { str = "ab\\}cd}ef"; idx = 0; chars = [ "}" ]; expected = 6; }
+      { str = "aå\\}cd}ef"; idx = 0; chars = [ "}" ]; expected = 7; }
+      { str = "å}"; idx = 0; chars = [ "}" ]; expected = 2; }
+      { str = "∫}"; idx = 0; chars = [ "}" ]; expected = 3; }
+      { str = "escaped\\"; idx = 0; chars = [ "}" ]; expected = -1; }
+      { str = "escaped\\\\"; idx = 0; chars = [ "}" ]; expected = -1; }
+      { str = ""; idx = 0; chars = [ "," ]; expected = -1; }
+      { str = ",abc"; idx = 0; chars = [ "," ]; expected = 0; }
+      { str = ",åbc"; idx = 0; chars = [ "," ]; expected = 0; }
+      { str = "abc,def"; idx = 0; chars = [ "," ]; expected = 3; }
+      { str = "abå,def"; idx = 0; chars = [ "," ]; expected = 4; }
+      { str = "abc\\,def"; idx = 0; chars = [ "," ]; expected = -1; }
+      { str = "abc\\,def,ghi"; idx = 0; chars = [ "," ]; expected = 8; }
     ];
   };
 

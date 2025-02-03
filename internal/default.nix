@@ -10,6 +10,7 @@ let
     stringLength
     substring
     tail
+    elem
     elemAt
   ;
 
@@ -36,34 +37,20 @@ in rec {
       head (utf8.chars remaining);
 
   firstUnescapedMeta = str:
-    let
-      chars = stringToCharacters str;
+    findUnescapedChar str 0 ["*" "["];
 
-      find = i: chars:
-        if chars == [] then -1
-        else let
-          char = head chars;
-          rest = tail chars;
-        in
-          if char == "*" || char == "[" then i
-          else if char == "\\" then
-            if rest == [] then -1
-            else find (i + 2) (tail rest)
-          else find (i + 1) rest;
-
-    in find 0 chars;
-
-  findUnescapedChar = str: idx: char:
+  findUnescapedChar = str: idx: chars:
     let
       find = i:
         if i >= stringLength str then -1
         else
           let
             curChar = decodeUtf8 str i;
+            prevPrevChar = if i > 1 then decodeUtf8 str (i - 2) else "";
             prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
-            isEscaped = prevChar == "\\";
+            isEscaped = prevChar == "\\" && prevPrevChar != "\\";
           in
-            if curChar == char && !isEscaped then i
+            if elem curChar chars && !isEscaped then i
             else find (i + 1);
     in find idx;
 
@@ -72,7 +59,7 @@ in rec {
       len = stringLength str;
       doCollect = start: parts:
         let
-          nextComma = findUnescapedChar str start ",";
+          nextComma = findUnescapedChar str start [","];
           segment = if start < 0 || len < 0 then ""
                   else substring start (if nextComma == -1
                                       then len - start
@@ -84,8 +71,8 @@ in rec {
 
   parseAlternates = pattern:
     let
-      openIdx = findUnescapedChar pattern 0 "{";
-      closeIdx = if openIdx == -1 then -1 else findUnescapedChar pattern (openIdx + 1) "}";
+      openIdx = findUnescapedChar pattern 0 ["{"];
+      closeIdx = if openIdx == -1 then -1 else findUnescapedChar pattern (openIdx + 1) ["}"];
     in if openIdx == -1 || closeIdx == -1 then { prefix = ""; alternates = [ pattern ]; suffix = ""; } 
     else {
       prefix = substring 0 openIdx pattern;
