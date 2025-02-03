@@ -166,24 +166,6 @@ in {
     ];
   };
 
-  firstUnescapedMeta = mkSuite {
-    testNameFn = testCase: ''firstUnescapedMeta "${testCase.str}"'';
-    valueFn = testCase: internal.firstUnescapedMeta testCase.str;
-    tests = [
-      { str = ""; expected = -1; }
-      { str = "*abc"; expected = 0; }
-      { str = "\\*a*"; expected = 3; }
-      { str = "abc\\*def"; expected = -1; }
-      { str = "ab\\*cd*ef"; expected = 6; }
-      #TODO: Fix
-      # { str = "a∫\\*cd*ef"; expected = 6; }
-      { str = "no\\*meta"; expected = -1; }
-      { str = "\\\\*meta"; expected = 2; }
-      { str = "escaped\\"; expected = -1; }
-      { str = "escaped\\\\"; expected = -1; }
-    ];
-  };
-
   findUnescapedChar = mkSuite {
     testNameFn = testCase: ''findUnescapedChar "${testCase.str}" "${toString testCase.idx}" "${builtins.toJSON testCase.chars}"'';
     valueFn = testCase: internal.findUnescapedChar testCase.str testCase.idx testCase.chars;
@@ -217,6 +199,16 @@ in {
       { str = "abå,def"; idx = 0; chars = [ "," ]; expected = 4; }
       { str = "abc\\,def"; idx = 0; chars = [ "," ]; expected = -1; }
       { str = "abc\\,def,ghi"; idx = 0; chars = [ "," ]; expected = 8; }
+      { str = ""; idx = 0; chars = [ "*" "[" ]; expected = -1; }
+      { str = "*abc"; idx = 0; chars = [ "*" "[" ]; expected = 0; }
+      { str = "\\*a*"; idx = 0; chars = [ "*" "[" ]; expected = 3; }
+      { str = "abc\\*def"; idx = 0; chars = [ "*" "[" ]; expected = -1; }
+      { str = "ab\\*cd*ef"; idx = 0; chars = [ "*" "[" ]; expected = 6; }
+      { str = "aå\\*cd*ef"; idx = 0; chars = [ "*" "[" ]; expected = 7; }
+      { str = "no\\*meta"; idx = 0; chars = [ "*" "[" ]; expected = -1; }
+      { str = "\\\\*meta"; idx = 0; chars = [ "*" "[" ]; expected = 2; }
+      { str = "escaped\\"; idx = 0; chars = [ "*" "[" ]; expected = -1; }
+      { str = "escaped\\\\"; idx = 0; chars = [ "*" "[" ]; expected = -1; }
     ];
   };
 

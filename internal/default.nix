@@ -36,9 +36,6 @@ in rec {
     in
       head (utf8.chars remaining);
 
-  firstUnescapedMeta = str:
-    findUnescapedChar str 0 ["*" "["];
-
   findUnescapedChar = str: idx: chars:
     let
       find = i:
@@ -59,7 +56,7 @@ in rec {
       len = stringLength str;
       doCollect = start: parts:
         let
-          nextComma = findUnescapedChar str start [","];
+          nextComma = findUnescapedChar str start [ "," ];
           segment = if start < 0 || len < 0 then ""
                   else substring start (if nextComma == -1
                                       then len - start
@@ -71,8 +68,8 @@ in rec {
 
   parseAlternates = pattern:
     let
-      openIdx = findUnescapedChar pattern 0 ["{"];
-      closeIdx = if openIdx == -1 then -1 else findUnescapedChar pattern (openIdx + 1) ["}"];
+      openIdx = findUnescapedChar pattern 0 [ "{" ];
+      closeIdx = if openIdx == -1 then -1 else findUnescapedChar pattern (openIdx + 1) [ "}" ];
     in if openIdx == -1 || closeIdx == -1 then { prefix = ""; alternates = [ pattern ]; suffix = ""; } 
     else {
       prefix = substring 0 openIdx pattern;
@@ -96,7 +93,7 @@ in rec {
 
   globSegments' = root: pattern: firstSegment:
     let
-      patternStart = firstUnescapedMeta pattern;
+      patternStart = findUnescapedChar pattern 0 [ "*" "[" ];
 
       splitIndex = lastIndexSlash pattern;
 
