@@ -136,7 +136,25 @@ in {
         };
       }
       {
+        input = "[\\^åbc]";
+        startIdx = 0;
+        expected = {
+          content = "\\^åbc";
+          endIdx = 7;
+          isNegated = false;
+        };
+      }
+      {
         input = "[!a-z]123";
+        startIdx = 0;
+        expected = {
+          content = "a-z";
+          endIdx = 5;
+          isNegated = true;
+        };
+      }
+      {
+        input = "[!a-z]¡23";
         startIdx = 0;
         expected = {
           content = "a-z";
@@ -150,6 +168,15 @@ in {
         expected = {
           content = "abc";
           endIdx = 5;
+          isNegated = true;
+        };
+      }
+      {
+        input = "[^a∫c]";
+        startIdx = 0;
+        expected = {
+          content = "a∫c";
+          endIdx = 7;
           isNegated = true;
         };
       }
@@ -352,6 +379,7 @@ in {
       { pattern = "a*b*c*d*e*/f"; path = "axbxcxdxe/xxx/f"; expected = false; }
       { pattern = "a*b*c*d*e*/f"; path = "axbxcxdxexxx/fff"; expected = false; }
       { pattern = "a\\*b"; path = "ab"; expected = false; }
+      { pattern = "å\\*∫*"; path = "å∫¡™£"; expected = false; }
 
       # Globstar / doublestar
       { pattern = "**"; path = ""; expected = true; }
@@ -373,6 +401,7 @@ in {
       { pattern = "å/**/∫"; path = "å/∫"; expected = true; }
       { pattern = "a/**/c"; path = "a/b/c"; expected = true; }
       { pattern = "a/**/d"; path = "a/b/c/d"; expected = true; }
+      { pattern = "a/**/d"; path = "a/∫/ç/d"; expected = true; }
       { pattern = "a/\\**"; path = "a/b/c"; expected = false; }
 
       # Character Class
