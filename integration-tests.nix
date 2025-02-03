@@ -55,7 +55,12 @@ let
         "foo.gø"
         "gø.foo"
       ];
-
+    
+    testUTFCharsWithNegation = runTest "globs files with an utf8 char match constraint with negation"
+      (normalizeFileset (globset.globs testRoot [ "gø.*" "**/*.gø" "!*.foo" ])) [
+        "foo.gø"
+      ];
+  
     testCProject = runTest "globs all C files that aren't tests"
       (normalizeFileset
         (globset.globs testRoot [ "**/*.c" "**/*.h" "!**/test_*.c" ])) [
@@ -100,6 +105,11 @@ let
       testFileset = globset.globs testRoot [ "src/foo\\*.c" ];
       result = normalizeFileset testFileset;
     in runTest "escaping" result [ "src/foo*.c" ];
+
+    testEscapingWithUTF8 = let
+      testFileset = globset.globs testRoot [ "foo\\*.gø" ];
+      result = normalizeFileset testFileset;
+    in runTest "escaping with utf-8" result [ "foo*.gø" ];
 
     testGlobsOrdering = runTest "globs ordering" (normalizeFileset
       (globset.globs testRoot [ "**/*.c" "!**/test_*.c" "src/test/**/*.c" ])) [
