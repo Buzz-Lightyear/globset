@@ -195,12 +195,17 @@ in rec {
   lastIndexSlash = str:
     let
       len = stringLength str;
+
       find = i:
         if i < 0 then -1
         else
-          let pos = findUnescapedChar (substring 0 (i + 1) str) 0 [ "/" ];
-          in if pos != -1 then pos else find (i - 1);
-
+          let
+            curChar = decodeUtf8 str i;
+            prevChar = if i > 0 then decodeUtf8 str (i - 1) else "";
+            isEscaped = prevChar == "\\" && (i < 2 || decodeUtf8 str (i - 2) != "\\");
+          in
+            if curChar == "/" && !isEscaped then i
+            else find (i - 1);
     in find (len - 1);
 
   unescapeMeta = chars: str:
