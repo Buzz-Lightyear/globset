@@ -31,6 +31,255 @@ let
       );
 
 in {
+  doValidatePattern = mkSuite {
+    testNameFn = testCase: ''doValidatePattern "${testCase.pattern}"'';
+    valueFn = testCase: internal.doValidatePattern testCase.pattern;
+    tests = [
+      { pattern = "*"; expected = true; }
+      { pattern = "abc"; expected = true; }
+      { pattern = "åbc"; expected = true; }
+      { pattern = "**"; expected = true; }
+      { pattern = "**/*.go"; expected = true; }
+      { pattern = "src/**/*.c"; expected = true; }
+      { pattern = "/**/main.*"; expected = true; }
+      { pattern = "src/**.c"; expected = true; }
+      { pattern = "**/*.py"; expected = true; }
+
+      # Escaping
+      { pattern = "a\\*b"; expected = true; }
+      { pattern = "å\\*∫*"; expected = true; }
+      { pattern = "foo\\*.c"; expected = true; }
+      { pattern = "src/foo\\*.c"; expected = true; }
+      { pattern = "foo\\*.gø"; expected = true; }
+      { pattern = "foo\\[bar"; expected = true; }
+      { pattern = "foo\\]bar"; expected = true; }
+      { pattern = "test\\\\end"; expected = true; }
+
+      # Character classes
+      { pattern = "[abc]"; expected = true; }
+      { pattern = "[abç]"; expected = true; }
+      { pattern = "[α-θ]"; expected = true; }
+      { pattern = "[^abc]"; expected = true; }
+      { pattern = "[!0-9]"; expected = true; }
+      { pattern = "[a-zA-Z0-9]"; expected = true; }
+      { pattern = "src/[fl]*.c"; expected = true; }
+      { pattern = "*.[ch]"; expected = true; }
+      { pattern = "*.g[ø¬˚]"; expected = true; }
+      { pattern = "[^a-e][!p-r]o.c"; expected = true; }
+      { pattern = "f[\\-].c"; expected = true; }
+      { pattern = "f[\\[\\]].c"; expected = true; }
+      { pattern = "ƒ[\\[\\]].ç"; expected = true; }
+      { pattern = "[ef]\\*.c"; expected = true; }
+      { pattern = "[´f]\\*.c"; expected = true; }
+      { pattern = "src/[e-g]oo\\*.c"; expected = true; }
+      { pattern = "[e-g]oo\\*.[f-h][ø¬˚]"; expected = true; }
+      { pattern = "src/[e-g]oo\\-.[oc]"; expected = true; }
+      { pattern = "src/[e-g]oo[\\[\\-\\]\\*].[oc]"; expected = true; }
+      { pattern = "[e-g]oo[\\*].gø"; expected = true; }
+      { pattern = "src/[e-g][^n][n-q]\\*.c"; expected = true; }
+      { pattern = "**/[a-m]*.py"; expected = true; }
+      { pattern = "**/*.g[ø-ÿ]"; expected = true; }
+      { pattern = "src/[^t]*.c"; expected = true; }
+      { pattern = "g[^˜∂∆].foo"; expected = true; }
+      { pattern = "g[!˜∂∆].foo"; expected = true; }
+      { pattern = "src/[^lt]*.c"; expected = true; }
+      { pattern = "src/[!t]*.c"; expected = true; }
+      { pattern = "**/*.[ch]"; expected = true; }
+      { pattern = "**/*[m-o].py"; expected = true; }
+      { pattern = "**/*[r-t].py"; expected = true; }
+      { pattern = "**/ma[h-j]n.py"; expected = true; }
+
+      # Brace expansion
+      { pattern = "{a,b}"; expected = true; }
+      { pattern = "{å,b}"; expected = true; }
+      { pattern = "src/*.{c,h,x}"; expected = true; }
+      { pattern = "g{o,ø}.*"; expected = true; }
+      { pattern = "src/{,test/}*.c"; expected = true; }
+      { pattern = "foo{,\\*}.gø"; expected = true; }
+      { pattern = "{src,scripts}/{main,utils}.{c,py}"; expected = true; }
+      { pattern = "{foo,foo*}.{go,gø}"; expected = true; }
+      { pattern = "src/{,foo\\*}.c"; expected = true; }
+      { pattern = "src/foo{\\{,\\}}.o"; expected = true; }
+      { pattern = "src/foo{,\\,}.o"; expected = true; }
+      { pattern = "src/foo{\\[,\\]}.o"; expected = true; }
+      { pattern = "src/{foo*,bar*}.x"; expected = true; }
+      { pattern = "src/{foo[12],bar[12]}.x"; expected = true; }
+      { pattern = "src/{foo[0-3],bar[0-3]}.x"; expected = true; }
+      { pattern = "foo.{g[ø-ÿ]}"; expected = true; }
+      { pattern = "{foo,bar}/*.c"; expected = true; }
+      { pattern = "{,src/}{,test/}*.c"; expected = true; }
+      { pattern = "**/*.{[ch],[xo],go,nix}"; expected = true; }
+      { pattern = "pre{a,b}post{1,2}"; expected = true; }
+
+      # Complex patterns
+      { pattern = "gø.*"; expected = true; }
+      { pattern = "**/*.gø"; expected = true; }
+      { pattern = "!*.foo"; expected = true; }
+      { pattern = "!**/test_*.c"; expected = true; }
+      { pattern = "**/*.nix"; expected = true; }
+      { pattern = "*.nix"; expected = true; }
+      { pattern = "!home-manager/generated.nix"; expected = true; }
+      { pattern = "home-manager/users/teto/default.nix"; expected = true; }
+      { pattern = "{cmd,home-manager,pkg,scripts,src}/**/*.{[ch],[xo],go,nix}"; expected = true; }
+      { pattern = "!src/**"; expected = true; }
+      { pattern = "!{src,home-manager}/**"; expected = true; }
+      { pattern = "!{src,home-manager,cmd}/**"; expected = true; }
+      { pattern = "**/*.{[c-x],go,nix}"; expected = true; }
+      { pattern = "nested{a{b,c}d}"; expected = true; }
+      { pattern = "**/*[α-ω].∫"; expected = true; }
+      { pattern = "{å,∫}/**/*.{ç,ø}"; expected = true; }
+      { pattern = "**/{[αβγ],def}*.{[χψω],txt}"; expected = true; }
+      { pattern = "{[a-ÿ],**}/*.{c,h}"; expected = true; }
+
+      { pattern = "[\\\\]"; expected = true; }           # Escaped backslash in class
+      { pattern = "[\\,]"; expected = true; }            # Escaped comma in class
+      { pattern = "[\\{]"; expected = true; }            # Escaped opening brace in class
+      { pattern = "[\\}]"; expected = true; }            # Escaped closing brace in class
+      { pattern = "[a\\-b\\-c]"; expected = true; }      # Multiple escaped dashes
+      { pattern = "[\\^\\!]"; expected = true; }         # Escaped negation chars
+
+      { pattern = "**/{src,test}/{[a-z]*,utils}.{[ch],py}"; expected = true; }
+      { pattern = "{**/*.{[abc],[def]},*.txt}"; expected = true; }
+      { pattern = "**/*.{[α-ζ],go,nix}"; expected = true; }
+
+      # Invalid patterns
+      { pattern = "src/test\\"; expected = false; }       # Can't end with backslash
+      { pattern = "src/[abc"; expected = false; }         # Unclosed bracket
+      { pattern = "src/[]"; expected = false; }           # Empty character class
+      { pattern = "src/[^]"; expected = false; }          # Empty negated class
+      { pattern = "src/[!]"; expected = false; }          # Empty negated class (alt syntax)
+      { pattern = "src/{a,b"; expected = false; }         # Unclosed brace
+      { pattern = "src/a,b}"; expected = false; }         # Unmatched closing brace
+      { pattern = "src/}abc"; expected = false; }         # Unmatched closing brace at start
+      { pattern = "test\\"; expected = false; }           # Ends with backslash
+      { pattern = "foo\\"; expected = false; }            # Ends with single backslash
+      { pattern = "test[\\"; expected = false; }          # Backslash at end in char class
+      { pattern = "pattern{unclosed"; expected = false; } # Unclosed brace
+      { pattern = "unmatched}brace"; expected = false; }  # Unmatched closing brace
+      { pattern = "[a\\"; expected = false; }            # Trailing backslash in char class
+      { pattern = "test[a\\b\\"; expected = false; }     # Multiple trailing backslashes
+      { pattern = "\\"; expected = false; }              # Just a backslash
+      { pattern = "a\\b\\"; expected = false; }          # Ends with backslash after valid escape
+
+      # Edge cases
+      { pattern = ""; expected = true; }               # Empty pattern is valid
+      { pattern = "\\a"; expected = true; }            # Escape regular character
+      { pattern = "\\å"; expected = true; }            # Escape UTF-8 character
+      { pattern = "[\\]]"; expected = true; }          # Escaped ] in class
+      { pattern = "[\\[]"; expected = true; }          # Escaped [ in class
+      { pattern = "[\\-]"; expected = true; }          # Escaped - in class
+      { pattern = "[a\\-z]"; expected = true; }        # Escaped - in middle
+      { pattern = "[-az]"; expected = true; }          # - at start (literal)
+      { pattern = "[az-]"; expected = true; }          # - at end (literal)
+      { pattern = "\\*"; expected = true; }            # Escaped asterisk
+      { pattern = "\\?"; expected = true; }            # Escaped question mark
+      { pattern = "\\{"; expected = true; }            # Escaped opening brace
+      { pattern = "\\}"; expected = true; }            # Escaped closing brace
+      { pattern = "{,}"; expected = true; }            # Empty alternatives
+      { pattern = "{a,,b}"; expected = true; }         # Empty middle alternative
+      { pattern = "**/{,}*.c"; expected = true; }      # Empty in complex pattern
+    ];
+  };
+
+  validateCharClassAndGetPositionToResume = mkSuite {
+    testNameFn = testCase: ''validateCharClassAndGetPositionToResume "${testCase.pattern}" ${toString testCase.pos}'';
+    valueFn = testCase: internal.validateCharClassAndGetPositionToResume testCase.pattern testCase.pos;
+    tests = [
+      { pattern = "[abc]def"; pos = 0; expected = { valid = true; endPos = 5; }; }
+      { pattern = "[åbç]def"; pos = 0; expected = { valid = true; endPos = 7; }; }
+      { pattern = "x[^0-9]"; pos = 1; expected = { valid = true; endPos = 7; }; }
+      { pattern = "x[å-å]"; pos = 1; expected = { valid = true; endPos = 8; }; }
+      { pattern = "x[å-å\\[]"; pos = 1; expected = { valid = true; endPos = 10; }; }
+      { pattern = "x[^å-å]"; pos = 1; expected = { valid = true; endPos = 9; }; }
+      { pattern = "x[^º-ª]"; pos = 1; expected = { valid = true; endPos = 9; }; }
+      { pattern = "x[!0-9]"; pos = 1; expected = { valid = true; endPos = 7; }; }
+      { pattern = "[a\\]b]"; pos = 0; expected = { valid = true; endPos = 6; }; }
+      { pattern = "[å\\]∫]"; pos = 0; expected = { valid = true; endPos = 9; }; }
+      { pattern = "[\\^abc]"; pos = 0; expected = { valid = true; endPos = 7; }; }
+      { pattern = "[\\^åbc]"; pos = 0; expected = { valid = true; endPos = 8; }; }
+      { pattern = "[A-Za-z0-9]"; pos = 0; expected = { valid = true; endPos = 11; }; }
+      { pattern = "[^abc]"; pos = 0; expected = { valid = true; endPos = 6; }; }
+      { pattern = "[^a∫c]"; pos = 0; expected = { valid = true; endPos = 8; }; }
+      { pattern = "[!a-z]123"; pos = 0; expected = { valid = true; endPos = 6; }; }
+      { pattern = "[!a-z]¡23"; pos = 0; expected = { valid = true; endPos = 6; }; }
+      { pattern = "[α-ω]xyz"; pos = 0; expected = { valid = true; endPos = 7; }; }
+      { pattern = "[^∫-∆]"; pos = 0; expected = { valid = true; endPos = 10; }; }
+      { pattern = "x[!α-ω]"; pos = 1; expected = { valid = true; endPos = 9; }; }
+
+      { pattern = "x[\\^]"; pos = 1; expected = { valid = true; endPos = 5; }; }
+      { pattern = "[\\!abc]"; pos = 0; expected = { valid = true; endPos = 7; }; }
+      { pattern = "[\\^\\!]"; pos = 0; expected = { valid = true; endPos = 6; }; }
+
+      { pattern = "[\\\\]"; pos = 0; expected = { valid = true; endPos = 4; }; }
+      { pattern = "[a\\\\b]"; pos = 0; expected = { valid = true; endPos = 6; }; }
+      { pattern = "[\\,\\{\\}]"; pos = 0; expected = { valid = true; endPos = 8; }; }
+      { pattern = "[å\\\\∫]"; pos = 0; expected = { valid = true; endPos = 9; }; }
+
+      { pattern = "[\\[\\]\\-\\*]"; pos = 0; expected = { valid = true; endPos = 10; }; }
+      { pattern = "[a\\-b\\-c]"; pos = 0; expected = { valid = true; endPos = 9; }; }
+
+      { pattern = "[α\\]β]"; pos = 0; expected = { valid = true; endPos = 8; }; }
+      { pattern = "[∫\\[∆]"; pos = 0; expected = { valid = true; endPos = 10; }; }
+
+      { pattern = "abc[def]"; pos = 3; expected = { valid = true; endPos = 8; }; }
+      { pattern = "åå[åå]"; pos = 4; expected = { valid = true; endPos = 10; }; }
+
+      { pattern = "[\\"; pos = 0; expected = { valid = false; endPos = -1; }; }
+      { pattern = "[a\\"; pos = 0; expected = { valid = false; endPos = -1; }; }
+      { pattern = "[α\\"; pos = 0; expected = { valid = false; endPos = -1; }; }
+      { pattern = "[abc\\"; pos = 0; expected = { valid = false; endPos = -1; }; }
+    ];
+  };
+
+  validateLoop = mkSuite {
+    testNameFn = testCase: ''validateLoop "${testCase.pattern}" ${toString testCase.pos} ${toString testCase.altDepth}'';
+    valueFn = testCase: internal.validateLoop testCase.pattern testCase.pos testCase.altDepth;
+    tests = [
+      # Basic state transitions
+      { pattern = "abc"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = ""; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "*"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+
+      # Brace nesting
+      { pattern = "{a,b}"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "{a,b"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 1; }; }
+      { pattern = "a,b}"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+      { pattern = "{a{b,c}d}"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+
+      # Escape sequences
+      { pattern = "a\\*b"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "test\\"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+
+      # Character classes
+      { pattern = "[abc]"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "[abc"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+      { pattern = "[]"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+
+      { pattern = "abc[def]"; pos = 3; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "x[abc"; pos = 1; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+      { pattern = "∫[αβγ]"; pos = 3; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+
+      # Escaped opening brackets (should not trigger char class validation)
+      { pattern = "\\[abc]"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "x\\[test"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "å\\[∫"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+
+      # UTF-8 characters in various positions
+      { pattern = "∫{α,β}"; pos = 3; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "{∫,α"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 1; }; }
+      { pattern = "∫}"; pos = 3; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+
+      # Complex escape sequences with UTF-8
+      { pattern = "α\\∫β"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "∫\\"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+
+      # Brace nesting with UTF-8
+      { pattern = "{α{β,γ}δ}"; pos = 0; altDepth = 0; expected = { valid = true; altDepth = 0; }; }
+      { pattern = "{α{β,γ"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 2; }; }
+      { pattern = "α,β}γ}"; pos = 0; altDepth = 0; expected = { valid = false; altDepth = 0; }; }
+    ];
+  };
+
   decodeUtf8 = mkSuite {
     testNameFn = testCase: ''decodeUtf8 "${testCase.str}" ${toString testCase.offset}'';
     valueFn = testCase: internal.decodeUtf8 testCase.str testCase.offset;

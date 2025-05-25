@@ -49,6 +49,9 @@ let
 
       in foldl' applyPattern (fs.unions []) patterns;
 
+    # Checks if a given pattern is valid in case the user wants to verify user provided patterns
+    isValid = pattern: internal.doValidatePattern pattern;
+
     # The file set containing all files that match the given glob pattern, starting
     # from the specified root directory.
     #

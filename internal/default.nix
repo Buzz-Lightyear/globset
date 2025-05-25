@@ -30,6 +30,82 @@ let
   ;
 
 in rec {
+  doValidatePattern = s: 
+    let
+      result = validateLoop s 0 0;
+    in 
+      result.valid && result.altDepth == 0;
+
+  validateLoop = s: pos: altDepth:
+    let
+      sLen = stringLength s;
+    in
+      if pos >= sLen then
+        { valid = altDepth == 0; altDepth = altDepth; }
+      else
+        let
+          currentChar = decodeUtf8 s pos;
+          nextPos = pos + 1;
+        in
+          if currentChar == "\\" then
+            if nextPos >= sLen then
+              { valid = false; altDepth = altDepth; }
+            else
+              let
+                afterEscape = pos + 2;
+              in
+                if afterEscape > sLen then
+                  { valid = false; altDepth = altDepth; }
+                else
+                  validateLoop s afterEscape altDepth
+          
+          else if currentChar == "[" then
+            let
+              classResult = validateCharClassAndGetPositionToResume s pos;
+            in
+              if classResult.valid then
+                validateLoop s classResult.endPos altDepth
+              else
+                { valid = false; altDepth = altDepth; }
+          
+          else if currentChar == "{" then
+            validateLoop s nextPos (altDepth + 1)
+          
+          else if currentChar == "}" then
+            if altDepth == 0 then
+              { valid = false; altDepth = altDepth; }
+            else
+              validateLoop s nextPos (altDepth - 1)
+          
+          else
+            validateLoop s nextPos altDepth;
+
+  validateCharClassAndGetPositionToResume = s: startPos:
+    let
+      sLen = stringLength s;
+      afterBracket = startPos + 1;
+      tooShort = afterBracket >= sLen;
+    in
+      if tooShort then { valid = false; endPos = startPos; }
+      else
+        let
+          firstChar = decodeUtf8 s afterBracket;
+          isNegated = firstChar == "^" || firstChar == "!";
+          contentStart = if isNegated then afterBracket + stringLength firstChar else afterBracket;
+
+          noContent = contentStart >= sLen;
+          isEmpty = !noContent && decodeUtf8 s contentStart == "]";
+        in
+          if noContent then { valid = false; endPos = startPos; }
+          else if isEmpty then { valid = false; endPos = startPos; }
+          else
+            let
+              closingBracketPos = findUnescapedChar s contentStart [ "]" ];
+            in
+              if closingBracketPos == -1 
+              then { valid = false; endPos = -1; }
+              else { valid = true; endPos = closingBracketPos + 1; };
+
   decodeUtf8 = str: offset:
     let
       remaining = substring offset (stringLength str - offset) str;
